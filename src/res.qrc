@@ -1,0 +1,45 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/app/gear_in.png</file>
+        <file>icons/app/icon.ico</file>
+        <file>icons/app/icon.png</file>
+        <file>icons/connection/connect.png</file>
+        <file>icons/connection/database_connect.png</file>
+        <file>icons/connection/disconnect.png</file>
+        <file>icons/connection/flashdisk.png</file>
+        <file>icons/file/file_save_as.png</file>
+        <file>icons/file/folder.png</file>
+        <file>icons/file/folder_page_white.png</file>
+        <file>icons/file/page_white_add.png</file>
+        <file>icons/file/save_as.png</file>
+        <file>icons/package/package.png</file>
+        <file>icons/package/package_add.png</file>
+        <file>icons/package/package_delete.png</file>
+        <file>icons/package/package_go.png</file>
+        <file>icons/plugin/plugin.png</file>
+        <file>icons/plugin/plugin_add.png</file>
+        <file>icons/plugin/plugin_delete.png</file>
+        <file>icons/plugin/plugin_disabled.png</file>
+        <file>icons/plugin/plugin_edit.png</file>
+        <file>icons/plugin/plugin_error.png</file>
+        <file>icons/plugin/plugin_go.png</file>
+        <file>icons/plugin/plugin_link.png</file>
+        <file>icons/variables/tag_hash.png</file>
+        <file>icons/file/script_start.png</file>
+        <file>icons/file/script_stop.png</file>
+        <file>icons/charts/chart_line_add.png</file>
+        <file>icons/charts/chart_line_delete.png</file>
+        <file>icons/charts/chart_line_edit.png</file>
+        <file>icons/charts/chart_line_link.png</file>
+        <file>icons/variables/bullet_arrow_down.png</file>
+        <file>icons/variables/bullet_arrow_up.png</file>
+        <file>icons/variables/tag_blue.png</file>
+        <file>icons/variables/tag_blue_add.png</file>
+        <file>icons/variables/tag_blue_delete.png</file>
+        <file>icons/variables/tag_blue_edit.png</file>
+        <file>icons/misc/accept_button.png</file>
+        <file>icons/misc/add.png</file>
+        <file>icons/misc/cancel.png</file>
+        <file>icons/misc/delete.png</file>
+    </qresource>
+</RCC>
