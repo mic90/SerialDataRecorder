@@ -3,8 +3,8 @@
 
 SerialPortConfig::SerialPortConfig() :
     m_name(""),
-    m_baudRate(QSerialPort::Baud1200),
-    m_dataBits(QSerialPort::Data5),
+    m_baudRate(QSerialPort::Baud9600),
+    m_dataBits(QSerialPort::Data8),
     m_parity(QSerialPort::NoParity),
     m_stopBits(QSerialPort::OneStop),
     m_flowControl(QSerialPort::NoFlowControl)
@@ -12,7 +12,7 @@ SerialPortConfig::SerialPortConfig() :
 
 }
 
-QJsonObject SerialPortConfig::serialize()
+QJsonObject SerialPortConfig::toJson()
 {
     QJsonObject obj;
     obj.insert("name", m_name);
@@ -24,7 +24,7 @@ QJsonObject SerialPortConfig::serialize()
     return obj;
 }
 
-bool SerialPortConfig::deserialize(const QJsonObject &json)
+bool SerialPortConfig::fromJson(const QJsonObject &json)
 {
     if(json.isEmpty()) {
         return false;

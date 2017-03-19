@@ -6,7 +6,7 @@
 
 QT       += core gui serialport widgets printsupport
 
-CONFIG += c++11
+CONFIG += c++14
 
 TARGET = SerialDataRecorder
 TEMPLATE = app
@@ -17,48 +17,54 @@ include(external/qslog/QsLog.pri)
 SOURCES += main.cpp\
         mainwindow.cpp \
     project/project.cpp \
-    serial/serialportconfig.cpp \
     project/chart.cpp \
-    views/multiwindowview.cpp \
-    project/projectmanager.cpp \
-    views/variablesview.cpp \
+    serial/serialport.cpp \
+    serial/serialportconfig.cpp \
     ui/window_project.cpp \
     ui/window_variable.cpp \
     ui/window_configuration.cpp \
+    ui/chartwidget.cpp \
+    ui/resizablescrollarea.cpp \
     external/qcustomplot/qcustomplot.cpp \
-    project/variable.cpp \
-    parsers/mysensorsdataparser.cpp \
-    serial/serialport.cpp \
-    ui/variableitem.cpp \
-    parsers/parsersmanager.cpp \
-    parsers/sdrdataparser.cpp \
-    ui/chartwidget.cpp
+    ui/variablestablemodel.cpp \
+    ui/window_channels.cpp \
+    ui/window_charts.cpp \
+    project/channel.cpp \
+    ui/widget_chartconfiguration.cpp \
+    ui/window_chartconfiguration.cpp \
+    parsers/dataparserfactory.cpp \
+    parsers/asciidataparser.cpp
 
 HEADERS  += mainwindow.h \
     project/project.h \
-    serial/serialportconfig.h \
     project/chart.h \
-    views/multiwindowview.h \
-    project/projectmanager.h \
-    views/variablesview.h \
-    plugins/idataparser.h \
+    serial/serialport.h \
+    serial/serialportconfig.h \
     ui/window_project.h \
     ui/window_variable.h \
     ui/window_configuration.h \
+    ui/chartwidget.h \
+    ui/resizablescrollarea.h \
     external/qcustomplot/qcustomplot.h \
-    project/variable.h \
-    parsers/mysensorsdataparser.h \
-    serial/serialport.h \
-    ui/variableitem.h \
-    parsers/parsersmanager.h \
-    parsers/sdrdataparser.h \
-    ui/chartwidget.h
+    ui/variablestablemodel.h \
+    ui/window_channels.h \
+    ui/window_charts.h \
+    project/channel.h \
+    ui/widget_chartconfiguration.h \
+    ui/window_chartconfiguration.h \
+    parsers/dataparserfactory.h \
+    parsers/dataparser.h \
+    parsers/asciidataparser.h
 
 FORMS    += mainwindow.ui \
     window_project.ui \
     window_variable.ui \
     window_configuration.ui \
-    chartwidget.ui
+    chartwidget.ui \
+    window_channels.ui \
+    window_charts.ui \
+    widget_chartconfiguration.ui \
+    window_chartconfiguration.ui
 
 RESOURCES += \
     res.qrc

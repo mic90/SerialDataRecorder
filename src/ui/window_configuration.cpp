@@ -5,12 +5,10 @@
 
 #include <serial/serialportconfig.h>
 
-WindowConfiguration::WindowConfiguration(QSharedPointer<Project> project,
-                                         QSharedPointer<ParsersManager> parsersManager, QWidget *parent) :
+WindowConfiguration::WindowConfiguration(QSharedPointer<Project> project, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::WindowConfiguration),
-    m_project(project),
-    m_parsersManager(parsersManager)
+    m_project(project)
 {
     ui->setupUi(this);
     ui->name->addItems(getSerialPorts());
@@ -18,8 +16,7 @@ WindowConfiguration::WindowConfiguration(QSharedPointer<Project> project,
     m_config = project->serialConfig();
     setBaudRate((QSerialPort::BaudRate)m_config.baudRate());
     setPortName(m_config.name());
-
-    ui->parsers->addItems(m_parsersManager->getParsersNames());
+    ui->dataBits->setCurrentText(QString::number(m_config.dataBits()));
 }
 
 WindowConfiguration::~WindowConfiguration()
@@ -31,12 +28,13 @@ SerialPortConfig WindowConfiguration::getSerialPortConfig()
 {
     m_config.setName(getPortName());
     m_config.setBaudRate(getBaudRate());
+    m_config.setDataBits(ui->dataBits->currentText().toInt());
     return m_config;
 }
 
-QString WindowConfiguration::getDataParserName()
+QString WindowConfiguration::getDataFormat()
 {
-    return ui->parsers->currentText();
+    return ui->dataFormat->currentText();
 }
 
 void WindowConfiguration::setPortName(const QString &port)
@@ -99,10 +97,9 @@ void WindowConfiguration::setBaudRate(QSerialPort::BaudRate index)
 QStringList WindowConfiguration::getSerialPorts()
 {
     QStringList portNames;
-    for(auto portInfo : QSerialPortInfo::availablePorts()) {
-        if(portInfo.isValid() && !portInfo.isNull() && !portInfo.isBusy()) {
-            portNames.append(portInfo.portName());
-        }
+    for(auto portInfo : QSerialPortInfo::availablePorts())
+    {
+        portNames.append(portInfo.portName());
     }
     return portNames;
 }
@@ -115,9 +112,4 @@ void WindowConfiguration::on_ok_clicked()
 void WindowConfiguration::on_cancel_clicked()
 {
     reject();
-}
-
-void WindowConfiguration::on_parsers_currentTextChanged(const QString &parserName)
-{
-    ui->parserDescription->setText(m_parsersManager->getParserPlugin(parserName)->m_description);
 }

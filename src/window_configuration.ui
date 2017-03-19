@@ -7,15 +7,15 @@
     <x>0</x>
     <y>0</y>
     <width>526</width>
-    <height>533</height>
+    <height>340</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Configuration</string>
+   <string>Serial port configuration</string>
   </property>
   <property name="windowIcon">
    <iconset resource="res.qrc">
-    <normaloff>:/icons/app/gear_in.png</normaloff>:/icons/app/gear_in.png</iconset>
+    <normaloff>:/icons/file/port.png</normaloff>:/icons/file/port.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -30,6 +30,12 @@
       <string>Serial port:</string>
      </property>
      <layout class="QFormLayout" name="formLayout">
+      <property name="leftMargin">
+       <number>9</number>
+      </property>
+      <property name="rightMargin">
+       <number>9</number>
+      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
@@ -222,9 +228,15 @@
       </sizepolicy>
      </property>
      <property name="title">
-      <string>Data parser:</string>
+      <string>Data format:</string>
      </property>
      <layout class="QFormLayout" name="formLayout_2">
+      <property name="leftMargin">
+       <number>9</number>
+      </property>
+      <property name="rightMargin">
+       <number>9</number>
+      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="label_3">
         <property name="text">
@@ -233,98 +245,31 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QComboBox" name="parsers"/>
+       <widget class="QComboBox" name="dataFormat">
+        <item>
+         <property name="text">
+          <string>ASCII</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Binary</string>
+         </property>
+        </item>
+       </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="label_4">
+       <widget class="QLabel" name="label_9">
         <property name="text">
-         <string>Description:</string>
+         <string>Checksum:</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QLineEdit" name="parserDescription">
-        <property name="readOnly">
-         <bool>true</bool>
+       <widget class="QCheckBox" name="checkSum">
+        <property name="text">
+         <string/>
         </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox_3">
-     <property name="title">
-      <string>Data loggers:</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_6">
-      <item>
-       <widget class="QListWidget" name="loggers">
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QFrame" name="frame_6">
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QPushButton" name="addLogger">
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="res.qrc">
-             <normaloff>:/icons/misc/add.png</normaloff>:/icons/misc/add.png</iconset>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="removeLogger">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="res.qrc">
-             <normaloff>:/icons/misc/delete.png</normaloff>:/icons/misc/delete.png</iconset>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>390</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
        </widget>
       </item>
      </layout>
@@ -332,6 +277,12 @@
    </item>
    <item>
     <widget class="QFrame" name="frame">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -340,13 +291,13 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <property name="leftMargin">
-       <number>0</number>
+       <number>9</number>
       </property>
       <property name="topMargin">
        <number>0</number>
       </property>
       <property name="rightMargin">
-       <number>0</number>
+       <number>9</number>
       </property>
       <property name="bottomMargin">
        <number>0</number>

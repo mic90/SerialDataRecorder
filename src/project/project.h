@@ -1,20 +1,20 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
+#include <memory>
 #include <QObject>
 #include <QSharedPointer>
 
 #include <serial/serialportconfig.h>
 #include <project/chart.h>
-#include <project/variable.h>
-#include <plugins/idataparser.h>
+#include <project/channel.h>
 
 class Project : public QObject
 {
     Q_OBJECT
 public:
-    explicit Project(const QString& path = "", QObject *parent = 0);
-    ~Project();
+    Project(const QString& path = "", QObject *parent = 0);
+    ~Project() = default;
 
     bool load(const QString& path);
     bool load();
@@ -29,32 +29,26 @@ public:
     QString getDataParserName() const;
     void setDataParserName(const QString &dataParserName);
 
-    QSharedPointer<Variable> getVariable(const QString &name, const QString &id = "");
-    void addVariable(QSharedPointer<Variable>);
-    void addVariable(const QString& name, const QString& id = "");
-    QList<QSharedPointer<Variable>> getVariables();
+    QList<Channel> getChannels() const;
+    void setChannels(QList<Channel> const& channels);
 
-public slots:
-    void setVariableValue(const QJsonObject& obj);
+    QList<Chart> getCharts() const;
+    void setCharts(QList<Chart> const& charts);
 
 signals:
     void pathChanged(const QString& path);
     void nameChanged(const QString& path);
-    void variableAdded(QSharedPointer<Variable>);
-    void variableChanged(QSharedPointer<Variable>);
-    void variableValueChanged(QSharedPointer<Variable>);
-    void variableRemoved(QSharedPointer<Variable>);
 
 private:
-    QByteArray serialize();
-    bool deserialize(const QByteArray& data);
+    QByteArray toJson();
+    bool fromJson(const QByteArray& data);
 
 private:
     QString m_path;
     QString m_name;
     SerialPortConfig m_serialConfig;
-    QList<QSharedPointer<Variable>> m_variables;
-    QList<QSharedPointer<Chart>> m_charts;
+    QList<Channel> m_channels;
+    QList<Chart> m_charts;
     QString m_dataParserName;
 };
 

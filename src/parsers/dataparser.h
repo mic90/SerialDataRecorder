@@ -2,29 +2,31 @@
 #define IDATAPARSER_H
 
 #include <QtPlugin>
+#include <memory>
+#include <QJsonArray>
 
 class DataParserBase
 {
 public:
-    virtual QJsonObject parse(const QString&)
+    virtual QJsonArray parse(const QString&)
     {
-        return QJsonObject();
+        return QJsonArray();
     }
     virtual ~DataParserBase() = default;
 };
 
-class IDataParser
+class DataParserPlugin
 {
 public:
     virtual QString getName() const = 0;
     virtual QString getDescription() const = 0;
-    virtual DataParserBase* getParser() const = 0;
+    virtual std::unique_ptr<DataParserBase> getParser() const = 0;
 };
 
-class IDataParserObj
+class DataParserPluginObj
 {
 public:
-    IDataParserObj(IDataParser* plugin) :
+    DataParserPluginObj(DataParserPlugin* plugin) :
         m_name(plugin->getName()),
         m_description(plugin->getDescription()),
         m_plugin(plugin)
@@ -33,13 +35,13 @@ public:
 
     QString m_name;
     QString m_description;
-    IDataParser* m_plugin;
+    DataParserPlugin* m_plugin;
 };
 
 QT_BEGIN_NAMESPACE
 
-#define IDataParser_iid "sda.idataparser"
-Q_DECLARE_INTERFACE(IDataParser, IDataParser_iid)
+#define IDataParser_iid "sdr.idataparser"
+Q_DECLARE_INTERFACE(DataParserPlugin, IDataParser_iid)
 
 QT_END_NAMESPACE
 

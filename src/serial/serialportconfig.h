@@ -9,8 +9,8 @@ class SerialPortConfig
 public:
     SerialPortConfig();
 
-    QJsonObject serialize();
-    bool deserialize(const QJsonObject& json);
+    QJsonObject toJson();
+    bool fromJson(const QJsonObject& json);
 
     QString name() const;
     void setName(const QString &name);

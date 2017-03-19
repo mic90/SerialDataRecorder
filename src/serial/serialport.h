@@ -4,13 +4,13 @@
 #include <QObject>
 #include <QSerialPort>
 #include <serial/serialportconfig.h>
-#include <plugins/idataparser.h>
+#include <parsers/dataparser.h>
 
 class SerialPort : public QObject
 {
     Q_OBJECT
 public:
-    SerialPort(const SerialPortConfig& config, QSharedPointer<DataParserBase> parser, QObject *parent = 0);
+    SerialPort(const SerialPortConfig& config, std::unique_ptr<DataParserBase> parser, QObject *parent = 0);
 
     bool open();
     bool close();
@@ -20,12 +20,13 @@ private slots:
     void onDataWritten(qint64);
 
 signals:
-    void dataReady(QJsonObject);
+    void dataReady(QJsonArray);
 
 private:
     SerialPortConfig m_config;
     QSerialPort m_serial;
-    QSharedPointer<DataParserBase> m_parser;
+    std::unique_ptr<DataParserBase> m_parser;
+    int m_lastTimestamp;
 };
 
 #endif // SERIALPORT_H

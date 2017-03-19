@@ -15,11 +15,6 @@ Project::Project(const QString &path, QObject *parent) : QObject(parent),
 
 }
 
-Project::~Project()
-{
-
-}
-
 bool Project::load(const QString &path)
 {
     setPath(path);
@@ -28,13 +23,15 @@ bool Project::load(const QString &path)
 
 bool Project::load()
 {
+    setPath(m_path);
     QLOG_INFO() << "Loading project file" << m_path;
     QFile file(m_path);
-    if(!file.exists() || !file.open(QIODevice::ReadOnly)) {
+    if(!file.exists() || !file.open(QIODevice::ReadOnly))
+    {
         QLOG_ERROR() << "Can't open file at" << m_path;
         return false;
     }
-    bool ret = deserialize(file.readAll());
+    bool ret = fromJson(file.readAll());
     file.close();
     return ret;
 }
@@ -47,13 +44,19 @@ bool Project::save(const QString &path)
 
 bool Project::save()
 {
+    if(m_path.isEmpty())
+    {
+        return false;
+    }
+
     QLOG_INFO() << "Saving project to" << m_path << "...";
     QFile f(m_path);
-    if(!f.open(QIODevice::WriteOnly)) {
+    if(!f.open(QIODevice::WriteOnly))
+    {
         QLOG_ERROR() << "Can't open file" << m_path << "for saving";
         return false;
     }
-    f.write(serialize());
+    f.write(toJson());
     f.close();
     return true;
 }
@@ -85,97 +88,90 @@ SerialPortConfig Project::serialConfig() const
 void Project::setSerialConfig(const SerialPortConfig &serialConfig)
 {
     m_serialConfig = serialConfig;
-    if(!m_path.isEmpty()) {
+    if(!m_path.isEmpty())
+    {
         save();
     }
 }
 
-QSharedPointer<Variable> Project::getVariable(const QString &name, const QString &id)
+QList<Channel> Project::getChannels() const
 {
-    for(int i=0; i<m_variables.size(); i++) {
-        if(m_variables.at(i)->name() == name) {
-            if(!id.isEmpty() && m_variables.at(i)->id() == id) {
-                return m_variables[i];
-            } else if(id.isEmpty()){
-                return m_variables[i];
-            }
-        }
-    }
-    return QSharedPointer<Variable>(nullptr);
+    return m_channels;
 }
 
-void Project::addVariable(QSharedPointer<Variable> var)
+void Project::setChannels(const QList<Channel> &variables)
 {
-    m_variables.append(var);
-    if(var->id().isEmpty()) {
-        var->setId(QString::number(m_variables.size()));
-    }
-    QLOG_INFO() << "Added new variable" << var->name() << "id:" << var->id();
+    m_channels.clear();
+    m_channels.append(variables);
     save();
-    emit variableAdded(var);
 }
 
-void Project::addVariable(const QString &name, const QString &id)
+QList<Chart> Project::getCharts() const
 {
-    auto newVar = QSharedPointer<Variable>(new Variable(name, id));
-    addVariable(newVar);
+    return m_charts;
 }
 
-QList<QSharedPointer<Variable> > Project::getVariables()
+void Project::setCharts(const QList<Chart> &charts)
 {
-    return m_variables;
+    m_charts.clear();
+    m_charts.append(charts);
+    save();
 }
 
-void Project::setVariableValue(const QJsonObject &obj)
-{
-    QString id = obj.value("id").toString();
-    QString value = obj.value("value").toString();
-    for(auto variable : m_variables) {
-        if(variable->id() == id) {
-            variable->setValue(value);
-            QLOG_DEBUG() << "Variable" << variable->name() << "value changed to" << value;
-            emit variableValueChanged(variable);
-            return;
-        }
-    }
-}
-
-QByteArray Project::serialize()
+QByteArray Project::toJson()
 {
     QJsonDocument document;
-    QJsonObject root;
-    root.insert("name", m_name);
-    root.insert("parser", m_dataParserName);
-    root.insert("serial", m_serialConfig.serialize());
-    QJsonArray variables;
-    for(auto variable : m_variables) {
-        QJsonObject jsonVar;
-        jsonVar.insert("name", variable->name());
-        jsonVar.insert("id", variable->id());
-        variables.append(jsonVar);
+    QJsonObject root
+    {
+        {"name", m_name},
+        {"parser", m_dataParserName},
+        {"serial", m_serialConfig.toJson()}
+    };
+    QJsonArray channels;
+    for(auto const& channel : m_channels)
+    {
+        channels.append(channel.toJson());
     }
-    root.insert("variables", variables);
+    root.insert("channels", channels);
+    QJsonArray charts;
+    for(auto const& chart : m_charts)
+    {
+        charts.append(chart.toJson());
+    }
+    root.insert("charts", charts);
     document.setObject(root);
     return document.toJson();
 }
 
-bool Project::deserialize(const QByteArray &data)
+bool Project::fromJson(const QByteArray &data)
 {
     QJsonDocument document = QJsonDocument::fromJson(data);
     QJsonObject root = document.object();
-    if(root.isEmpty()) {
+    if(root.isEmpty())
+    {
         QLOG_ERROR() << "Root object is empty";
         return false;
     }
     m_dataParserName = root.value("parser").toString();
     QJsonObject serialConfig = root.value("serial").toObject();
-    m_serialConfig.deserialize(serialConfig);
-    QJsonArray variables = root.value("variables").toArray();
-    for(auto jsonVar : variables) {
-        QString name = jsonVar.toObject().value("name").toString();
-        QString id = jsonVar.toObject().value("id").toString();
-        QSharedPointer<Variable> newVar(new Variable(name, id));
-        m_variables.append(newVar);
+    m_serialConfig.fromJson(serialConfig);
+    QJsonArray channels = root.value("channels").toArray();
+    for(auto const& jsonChannel : channels)
+    {
+        Channel newChannel;
+        if(newChannel.fromJson(jsonChannel.toObject()))
+        {
+            m_channels.append(newChannel);
+        }
+    }
+    QJsonArray charts = root.value("charts").toArray();
+    for(auto const& jsonChart: charts)
+    {
+        Chart newChart;
+        if(newChart.fromJson(jsonChart.toObject()))
+        {
+            m_charts.append(newChart);
+        }
     }
     return true;
 }
@@ -188,7 +184,8 @@ QString Project::getDataParserName() const
 void Project::setDataParserName(const QString &dataParserName)
 {
     m_dataParserName = dataParserName;
-    if(!m_path.isEmpty()) {
+    if(!m_path.isEmpty())
+    {
         save();
     }
 }

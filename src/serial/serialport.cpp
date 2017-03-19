@@ -1,9 +1,10 @@
 #include "serialport.h"
 #include <QsLog.h>
 
-SerialPort::SerialPort(const SerialPortConfig &config, QSharedPointer<DataParserBase> parser, QObject *parent) : QObject(parent),
+SerialPort::SerialPort(const SerialPortConfig &config, std::unique_ptr<DataParserBase> parser, QObject *parent) : QObject(parent),
     m_config(config),
-    m_parser(parser)
+    m_parser(parser.release()),
+    m_lastTimestamp(0)
 {
     connect(&m_serial, &QSerialPort::readyRead, this, &SerialPort::onDataReady);
     connect(&m_serial, &QSerialPort::bytesWritten, this, &SerialPort::onDataWritten);
@@ -11,12 +12,14 @@ SerialPort::SerialPort(const SerialPortConfig &config, QSharedPointer<DataParser
 
 bool SerialPort::open()
 {
-    if(m_config.name().isEmpty()) {
+    if(m_config.name().isEmpty())
+    {
         QLOG_ERROR() << "Serial port is not set";
         return false;
     }
     m_serial.setPortName(m_config.name());
-    if(!m_serial.open(QIODevice::ReadWrite)) {
+    if(!m_serial.open(QIODevice::ReadWrite))
+    {
         QLOG_ERROR() << "Can't open serial port" << m_config.name();
         return false;
     }
@@ -38,9 +41,14 @@ bool SerialPort::close()
 
 void SerialPort::onDataReady()
 {
+    auto timestamp = QTime::currentTime().msecsSinceStartOfDay();
+    QLOG_DEBUG() << timestamp - m_lastTimestamp;
+    m_lastTimestamp = timestamp;
+
     QString data = m_serial.readAll();
-    QJsonObject ret = m_parser->parse(data);
-    if(!ret.isEmpty()) {
+    QJsonArray ret = m_parser->parse(data);
+    if(!ret.isEmpty())
+    {
         emit dataReady(ret);
     }
 }

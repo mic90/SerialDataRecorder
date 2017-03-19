@@ -2,9 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QScopedPointer>
-#include <project/projectmanager.h>
-#include <views/multiwindowview.h>
+#include <ui/window_project.h>
 
 namespace Ui {
 class MainWindow;
@@ -18,18 +16,20 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+private:
+    WindowProject *getActiveWidget();
+
 private slots:
     void on_actionNew_triggered();
     void on_actionSave_triggered();
     void on_actionSave_as_triggered();
     void on_actionOpen_triggered();
-    void on_actionSettings_triggered();
     void on_actionExit_triggered();
+
+    void on_actionExport_Image_triggered();
 
 private:
     Ui::MainWindow *ui;
-    ProjectManager m_projectMgr;
-    QScopedPointer<MultiWindowView> m_view;
 };
 
 #endif // MAINWINDOW_H

@@ -1,21 +1,22 @@
 #include "ui/window_variable.h"
 #include "ui_window_variable.h"
 
-WindowVariable::WindowVariable(QSharedPointer<Variable> var, QWidget *parent) :
+WindowVariable::WindowVariable(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::WindowVariable),
-    m_var(var)
+    ui(new Ui::WindowVariable)
 {
     ui->setupUi(this);
-    if(m_var) {
-        ui->name->setText(m_var->name());
-        ui->id->setText(m_var->id());
-        setWindowTitle("Edit variable: " + m_var->name());
-        setWindowIcon(QIcon(":/icons/variables/tag_blue_edit.png"));
-    } else {
-        setWindowTitle("Add new variable");
-        setWindowIcon(QIcon(":/icons/variables/tag_blue_add.png"));
-    }
+    setWindowTitle("Add new variable");
+    setWindowIcon(QIcon(":/icons/variables/tag_blue_add.png"));
+}
+
+WindowVariable::WindowVariable(const Channel &var, QWidget *parent) :
+    WindowVariable(parent)
+{
+    ui->name->setText(var.name());
+    ui->id->setText(QString::number(var.id()));
+    setWindowTitle("Edit variable: " + var.name());
+    setWindowIcon(QIcon(":/icons/variables/tag_blue_edit.png"));
 }
 
 WindowVariable::~WindowVariable()
@@ -26,6 +27,11 @@ WindowVariable::~WindowVariable()
 QString WindowVariable::getName() const
 {
     return ui->name->text();
+}
+
+QString WindowVariable::getUnit() const
+{
+    return ui->unit->text();
 }
 
 QString WindowVariable::getId() const
@@ -45,5 +51,10 @@ void WindowVariable::on_cancel_clicked()
 
 void WindowVariable::on_name_textChanged(const QString &name)
 {
-    ui->ok->setEnabled(!name.isEmpty());
+    ui->ok->setEnabled(!name.isEmpty() && !ui->id->text().isEmpty());
+}
+
+void WindowVariable::on_id_textChanged(const QString &id)
+{
+    ui->ok->setEnabled(!id.isEmpty() && !ui->name->text().isEmpty());
 }

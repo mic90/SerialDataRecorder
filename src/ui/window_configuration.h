@@ -5,7 +5,7 @@
 #include <project/project.h>
 #include <QSerialPort>
 
-#include <parsers/parsersmanager.h>
+#include <parsers/dataparserfactory.h>
 
 namespace Ui {
 class WindowConfiguration;
@@ -14,14 +14,13 @@ class WindowConfiguration;
 class WindowConfiguration : public QDialog
 {
     Q_OBJECT
-
+    Q_DISABLE_COPY(WindowConfiguration)
 public:
-    WindowConfiguration(QSharedPointer<Project> project, QSharedPointer<ParsersManager> parsersManager,
-                                 QWidget *parent = 0);
+    WindowConfiguration(QSharedPointer<Project> project, QWidget *parent = 0);
     ~WindowConfiguration();
 
     SerialPortConfig getSerialPortConfig();
-    QString getDataParserName();
+    QString getDataFormat();
 
 private:
     void setPortName(const QString& port);
@@ -33,13 +32,11 @@ private:
 private slots:
     void on_ok_clicked();
     void on_cancel_clicked();
-    void on_parsers_currentTextChanged(const QString &arg1);
 
 private:
     Ui::WindowConfiguration *ui;
     QSharedPointer<Project> m_project;
     SerialPortConfig m_config;
-    QSharedPointer<ParsersManager> m_parsersManager;
 };
 
 #endif // WINDOW_CONFIGURATION_H

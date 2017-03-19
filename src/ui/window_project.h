@@ -6,8 +6,9 @@
 
 #include <project/project.h>
 #include <serial/serialport.h>
-#include <views/variablesview.h>
-#include <parsers/parsersmanager.h>
+#include <parsers/dataparserfactory.h>
+#include <ui/chartwidget.h>
+#include <ui/variablestablemodel.h>
 
 namespace Ui {
 class WindowProject;
@@ -16,39 +17,38 @@ class WindowProject;
 class WindowProject : public QMainWindow
 {
     Q_OBJECT
-
+    Q_DISABLE_COPY(WindowProject)
 public:
     WindowProject(QSharedPointer<Project> project, QWidget *parent = 0);
     ~WindowProject();
 
     QSharedPointer<Project> project() const;
 
+    void exportImages(QString const& fileName);
+
+private:
+    void createChart(Chart const& chart, QList<Channel> const& channels);
+    void createCharts(QList<Chart> const& charts, QList<Channel> const& channels);
+    void clearCharts();
+
 private slots:
-    void on_configuration_clicked();
-    void on_connect_clicked();
-    void on_disconnect_clicked();
-
-    void on_addVar_clicked();
-    void on_editVar_clicked();
-    void on_removeVar_clicked();
-    void on_moveVarDown_clicked();
-    void on_moveVarUp_clicked();
-
-    void on_addChart_clicked();
-    void on_editChart_clicked();
-    void on_removeChart_clicked();
-    void on_moveChartDown_clicked();
-    void on_moveChartUp_clicked();
-
-    void on_variables_itemSelectionChanged();
+    void onChartMinimumHeightChanged(int);
+    void onChartEditRequested();
+    void on_actionConnect_triggered();
+    void on_actionPause_triggered();
+    void on_actionDisconnect_triggered();
+    void on_actionSerial_Configuration_triggered();
+    void on_actionChannels_triggered();
+    void on_actionCharts_triggered();
 
 private:
     Ui::WindowProject *ui;
     QSharedPointer<Project> m_project;
-    QSharedPointer<SerialPort> m_serial;
-    QSharedPointer<VariablesView> m_varView;
-    QSharedPointer<ParsersManager> m_parsersManager;
-    QSharedPointer<DataParserBase> m_parser;
+    QScopedPointer<SerialPort> m_serial;
+    QThread m_serialThread;
+    DataParserFactory m_parserFactory;
+
+    QList<ChartWidget*> m_charts;
 };
 
 #endif // WINDOW_PROJECT_H
