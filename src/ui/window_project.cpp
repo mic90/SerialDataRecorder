@@ -5,6 +5,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QsLog.h>
+#include <QFileInfo>
 #include <external/qcustomplot/qcustomplot.h>
 
 #include <ui/window_configuration.h>
@@ -29,10 +30,14 @@ WindowProject::WindowProject(QSharedPointer<Project> project, QWidget *parent) :
     ui->toolBar->addAction(ui->actionCharts);
 
     createCharts(m_project->getCharts(), m_project->getChannels());
+    m_serialThread.setObjectName("SerialThread");
 }
 
 WindowProject::~WindowProject()
 {
+    m_serial.reset(); //TODO: Find a way to automatically stop thread and remove pointer
+    m_serialThread.quit();
+    m_serialThread.wait();
     delete ui;
 }
 
@@ -41,11 +46,37 @@ QSharedPointer<Project> WindowProject::project() const
     return m_project;
 }
 
-void WindowProject::exportImages(const QString &fileName)
+void WindowProject::exportImages(const QString &filePath)
+{
+    QFileInfo fInfo(filePath);
+    QString fileDir = fInfo.absolutePath();
+    QString fileBase = fInfo.baseName();
+
+    int index = 0;
+    QList<bool> results;
+    for(auto chartWidget : m_charts)
+    {
+        QString path = QString("%1/%2_%3.png").arg(fileDir).arg(fileBase).arg(index++);
+        results.append(chartWidget->exportImage(path));
+    }
+    if(results.contains(false))
+    {
+        QMessageBox::warning(this, "Export failed", "Couldn't export some of the chart images");
+    }
+}
+
+void WindowProject::setNightView(bool enabled)
 {
     for(auto chartWidget : m_charts)
     {
-        chartWidget->exportImage(fileName);
+        if(enabled)
+        {
+            chartWidget->setDarkTheme();
+        }
+        else
+        {
+            chartWidget->setLightTheme();
+        }
     }
 }
 
@@ -127,13 +158,19 @@ void WindowProject::on_actionConnect_triggered()
     }
     QLOG_INFO() << "Data parser set to" << m_project->getDataParserName();
     m_serial.reset(new SerialPort(m_project->serialConfig(), std::move(parser)));
+
+    m_serial->moveToThread(&m_serialThread);
+    connect(this, &WindowProject::startProcessing, m_serial.data(), &SerialPort::process);
+
     bool ret = m_serial->open();
     if(!ret)
     {
         QMessageBox::critical(this, "Error", "Connection failed, can't open serial port");
-        m_serial.reset();
         return;
     }
+    m_serialThread.start(QThread::HighPriority);
+    emit startProcessing();
+
     ui->actionConnect->setDisabled(ret);
     ui->actionPause->setDisabled(!ret);
     ui->actionDisconnect->setDisabled(!ret);
@@ -160,6 +197,8 @@ void WindowProject::on_actionDisconnect_triggered()
         QMessageBox::critical(this, "Error", "Can't close serial port");
         return;
     }
+    m_serialThread.quit();
+    m_serialThread.wait();
 
     ui->actionConnect->setDisabled(!ret);
     ui->actionPause->setDisabled(!ret);

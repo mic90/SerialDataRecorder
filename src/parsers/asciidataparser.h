@@ -8,7 +8,7 @@ class AsciiDataParser : public DataParserBase
 {
 public:
     AsciiDataParser();
-    virtual QJsonArray parse(const QString &) override;
+    virtual void parse(const QString &) override;
 
 private:
     QString m_buffer;

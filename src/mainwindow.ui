@@ -92,7 +92,14 @@
      <string>Data</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionNight_view"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuView"/>
    <addaction name="menuData"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -202,6 +209,18 @@
    </property>
    <property name="text">
     <string>Export Images</string>
+   </property>
+  </action>
+  <action name="actionNight_view">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/icons/file/contrast_high.png</normaloff>:/icons/file/contrast_high.png</iconset>
+   </property>
+   <property name="text">
+    <string>Night view</string>
    </property>
   </action>
  </widget>

@@ -7,19 +7,21 @@ AsciiDataParser::AsciiDataParser():
 
 }
 
-QJsonArray AsciiDataParser::parse(const QString &data)
+void AsciiDataParser::parse(const QString &data)
 {
-    m_buffer.append(data);
-    if(!m_buffer.endsWith("\n\r"))
+    for(auto const& msg : data.split("\n\r"))
     {
-        return QJsonArray();
+        if(msg.isEmpty())
+        {
+            continue;
+        }
+
+        QJsonArray jsonArray;
+        auto trimmed = msg.trimmed();
+        for(auto const& value : trimmed.split(","))
+        {
+            jsonArray.append(value.toDouble());
+        }
+        emit dataReady(jsonArray);
     }
-    QJsonArray jsonArray;
-    auto trimmed = m_buffer.trimmed();
-    for(auto const& value : trimmed.split(","))
-    {
-        jsonArray.append(value.toDouble());
-    }
-    m_buffer.clear();
-    return jsonArray;
 }

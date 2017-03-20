@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    QThread::currentThread()->setObjectName("MainThread");
 }
 
 MainWindow::~MainWindow()
@@ -38,7 +39,7 @@ void MainWindow::on_actionNew_triggered()
     QMdiSubWindow *wnd = ui->mdiArea->addSubWindow(widget);
     wnd->setWindowTitle(newProject->path());
     wnd->setAttribute(Qt::WA_DeleteOnClose);
-    wnd->setWindowIcon(QIcon(""));
+    wnd->setWindowIcon(QIcon());
     wnd->show();
 }
 
@@ -114,6 +115,7 @@ void MainWindow::on_actionOpen_triggered()
     QMdiSubWindow *wnd = ui->mdiArea->addSubWindow(widget);
     wnd->setWindowTitle(project->name());
     wnd->setAttribute(Qt::WA_DeleteOnClose);
+    wnd->setWindowIcon(QIcon());
     wnd->show();
 
 }
@@ -130,6 +132,16 @@ void MainWindow::on_actionExport_Image_triggered()
     {
         return;
     }
-    QString fileName = QFileDialog::getSaveFileName(this, "Save chart images", QString(), "Images (*.png)");
-    widget->exportImages(fileName);
+    QString filePath = QFileDialog::getSaveFileName(this, "Save chart images", QString(), "Images (*.png)");
+    widget->exportImages(filePath);
+}
+
+void MainWindow::on_actionNight_view_toggled(bool enabled)
+{
+    WindowProject *widget = getActiveWidget();
+    if(widget == nullptr)
+    {
+        return;
+    }
+    widget->setNightView(enabled);
 }

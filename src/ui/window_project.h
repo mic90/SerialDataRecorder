@@ -24,7 +24,8 @@ public:
 
     QSharedPointer<Project> project() const;
 
-    void exportImages(QString const& fileName);
+    void exportImages(QString const& filePath);
+    void setNightView(bool enabled);
 
 private:
     void createChart(Chart const& chart, QList<Channel> const& channels);
@@ -40,6 +41,9 @@ private slots:
     void on_actionSerial_Configuration_triggered();
     void on_actionChannels_triggered();
     void on_actionCharts_triggered();
+
+signals:
+    void startProcessing();
 
 private:
     Ui::WindowProject *ui;

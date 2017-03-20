@@ -1,13 +1,13 @@
 #include "serialport.h"
 #include <QsLog.h>
+#include <QThread>
 
 SerialPort::SerialPort(const SerialPortConfig &config, std::unique_ptr<DataParserBase> parser, QObject *parent) : QObject(parent),
     m_config(config),
     m_parser(parser.release()),
     m_lastTimestamp(0)
 {
-    connect(&m_serial, &QSerialPort::readyRead, this, &SerialPort::onDataReady);
-    connect(&m_serial, &QSerialPort::bytesWritten, this, &SerialPort::onDataWritten);
+    connect(m_parser.get(), &DataParserBase::dataReady, this, &SerialPort::dataReady);
 }
 
 bool SerialPort::open()
@@ -39,21 +39,16 @@ bool SerialPort::close()
     return true;
 }
 
-void SerialPort::onDataReady()
+void SerialPort::process()
 {
-    auto timestamp = QTime::currentTime().msecsSinceStartOfDay();
-    QLOG_DEBUG() << timestamp - m_lastTimestamp;
-    m_lastTimestamp = timestamp;
-
-    QString data = m_serial.readAll();
-    QJsonArray ret = m_parser->parse(data);
-    if(!ret.isEmpty())
+    while(m_serial.isOpen())
     {
-        emit dataReady(ret);
+        QString data = m_serial.readAll();
+        if(data.isEmpty())
+        {
+            continue;
+        }
+        m_parser->parse(data);
     }
-}
-
-void SerialPort::onDataWritten(qint64)
-{
-
+    QLOG_DEBUG() << "Serial port processing finished";
 }

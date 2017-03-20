@@ -15,9 +15,8 @@ public:
     bool open();
     bool close();
 
-private slots:
-    void onDataReady();
-    void onDataWritten(qint64);
+public slots:
+    void process();
 
 signals:
     void dataReady(QJsonArray);

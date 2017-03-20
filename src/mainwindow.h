@@ -28,6 +28,8 @@ private slots:
 
     void on_actionExport_Image_triggered();
 
+    void on_actionNight_view_toggled(bool arg1);
+
 private:
     Ui::MainWindow *ui;
 };

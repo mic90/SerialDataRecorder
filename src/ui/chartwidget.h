@@ -18,10 +18,13 @@ public:
     ChartWidget(Chart const& chart, QList<Channel> const& channels, QWidget *parent = 0);
     ~ChartWidget();
 
-    bool exportImage(QString const& fileName);
+    bool exportImage(QString const& filePath);
 
     void clearData();
     void setPause(bool enabled);
+
+    void setDarkTheme();
+    void setLightTheme();
 
     QColor color() const;
     void setChart(Chart const& chart);
@@ -30,6 +33,9 @@ public:
 public slots:
     void setColor(QColor color);
     void setData(QJsonArray data);
+
+private slots:
+    void refreshChart();
 
 signals:
     void minimumHeightChanged(int width);
@@ -42,15 +48,20 @@ protected:
     virtual void leaveEvent(QEvent *event) override;
 
 private:
+    void setAntialiasing(bool enabled);
+
+private:
     Ui::ChartWidget *ui;
     QCustomPlot m_plot;
     QColor m_color;
     QScopedPointer<QPropertyAnimation> m_colorAnimation;
     QList<QCPGraph*> m_graphs;
+    QCPTextElement* m_title;
     QList<Channel> m_channels;
     Chart m_chart;
     long long m_dataCount;
     bool m_pause;
+    QTimer m_refreshTimer;
 };
 
 #endif // CHARTWIDGET_H

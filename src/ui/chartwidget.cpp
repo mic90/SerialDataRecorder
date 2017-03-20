@@ -6,14 +6,19 @@
 
 const int MIN_HEIGHT = 150;
 const int MIN_XRANGE = 100;
-const int RESIZE_RATIO = 20;
-const int XRESIZE_RATION = 100;
+const int YRESIZE_RATIO = 20;
+const int XRESIZE_RATIO = 100;
 const QColor PRESSED_COLOR = QColor(102, 187, 106);
 const QColor NORMAL_COLOR = QColor(230, 230, 230);
+
+const int EXPORT_IMG_QUALITY = 100;
+const int EXPORT_IMG_SIZE_FACTOR = 1;
+const int CHART_REFRESH_INTERVAL = 50;
 
 ChartWidget::ChartWidget(Chart const& chart, QList<Channel> const& channels, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ChartWidget),
+    m_title(new QCPTextElement(&m_plot, chart.name(), QFont("sans", 11))),
     m_channels(channels),
     m_chart(chart),
     m_dataCount(0),
@@ -24,12 +29,17 @@ ChartWidget::ChartWidget(Chart const& chart, QList<Channel> const& channels, QWi
 
     setChart(m_chart);
 
+    //disable antialiasing
+    setAntialiasing(false);
+
+    //add chart title
+    m_plot.plotLayout()->insertRow(0);
+    m_plot.plotLayout()->addElement(0, 0, m_title);
+
     m_plot.legend->setVisible(true);
-    m_plot.legend->setFont(QFont("Helvetica", 9));
-    m_plot.axisRect(0)->setRangeDrag(Qt::Horizontal);
-    m_plot.axisRect(0)->setRangeZoom(Qt::Horizontal);
+    m_plot.axisRect()->setRangeDrag(Qt::Horizontal);
     m_plot.setInteraction(QCP::iRangeDrag, true);
-    m_plot.setInteraction(QCP::iRangeZoom, true);
+    setLightTheme();
     m_plot.replot();
     ui->horizontalLayout->addWidget(&m_plot);
 
@@ -43,6 +53,9 @@ ChartWidget::ChartWidget(Chart const& chart, QList<Channel> const& channels, QWi
 
     ui->frame->setStyleSheet(QString("background-color: rgb(%1, %2, %3);")
                             .arg(NORMAL_COLOR.red()).arg(NORMAL_COLOR.green()).arg(NORMAL_COLOR.blue()));
+
+    m_refreshTimer.setInterval(CHART_REFRESH_INTERVAL);
+    connect(&m_refreshTimer, SIGNAL(timeout()), this, SLOT(refreshChart()));
 }
 
 ChartWidget::~ChartWidget()
@@ -50,14 +63,15 @@ ChartWidget::~ChartWidget()
     delete ui;
 }
 
-bool ChartWidget::exportImage(const QString &fileName)
+bool ChartWidget::exportImage(const QString &filePath)
 {
-//    auto range = m_plot.xAxis->range();
-//    m_plot.xAxis->setRange(0, m_dataCount);
-//    m_plot.replot();
-    auto ok = m_plot.savePng(fileName, m_plot.width(), m_plot.height(), 1.0, 100);
-//    m_plot.xAxis->setRange(range);
-//    m_plot.replot();
+    QLOG_INFO() << "Saving chart image to" << filePath;
+    setAntialiasing(true);
+    m_plot.replot();
+    bool ok = m_plot.savePng(filePath, m_plot.width()*EXPORT_IMG_SIZE_FACTOR,
+                          m_plot.height()*EXPORT_IMG_SIZE_FACTOR, EXPORT_IMG_SIZE_FACTOR, EXPORT_IMG_QUALITY);
+    setAntialiasing(false);
+    m_plot.replot();
     return ok;
 }
 
@@ -65,7 +79,7 @@ void ChartWidget::clearData()
 {
     for(auto graph : m_graphs)
     {
-        graph->clearData();
+        graph->setData(QVector<double>(), QVector<double>());
     }
     m_plot.xAxis->setRange(0, m_chart.samplesCount());
     m_plot.replot();
@@ -75,6 +89,58 @@ void ChartWidget::clearData()
 void ChartWidget::setPause(bool enabled)
 {
     m_pause = enabled;
+}
+
+void ChartWidget::setDarkTheme()
+{
+    m_plot.xAxis->setBasePen(QPen(Qt::white, 1));
+    m_plot.yAxis->setBasePen(QPen(Qt::white, 1));
+    m_plot.xAxis->setTickPen(QPen(Qt::white, 1));
+    m_plot.yAxis->setTickPen(QPen(Qt::white, 1));
+    m_plot.xAxis->setSubTickPen(QPen(Qt::white, 1));
+    m_plot.yAxis->setSubTickPen(QPen(Qt::white, 1));
+    m_plot.xAxis->setTickLabelColor(Qt::white);
+    m_plot.yAxis->setTickLabelColor(Qt::white);
+    m_plot.xAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
+    m_plot.yAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
+    m_plot.xAxis->grid()->setZeroLinePen(Qt::NoPen);
+    m_plot.yAxis->grid()->setZeroLinePen(Qt::NoPen);
+    m_plot.xAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
+    m_plot.yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
+    m_plot.legend->setBrush(QBrush(QColor(20, 20, 20)));
+    m_plot.legend->setTextColor(Qt::white);
+    m_title->setTextColor(Qt::white);
+
+    m_plot.setBackground(QBrush(QColor(20, 20, 20)));
+    m_plot.axisRect()->setBackground(QBrush(QColor(20, 20, 20)));
+
+    m_plot.replot();
+}
+
+void ChartWidget::setLightTheme()
+{
+    m_plot.xAxis->setBasePen(QPen(Qt::black, 1));
+    m_plot.yAxis->setBasePen(QPen(Qt::black, 1));
+    m_plot.xAxis->setTickPen(QPen(Qt::black, 1));
+    m_plot.yAxis->setTickPen(QPen(Qt::black, 1));
+    m_plot.xAxis->setSubTickPen(QPen(Qt::black, 1));
+    m_plot.yAxis->setSubTickPen(QPen(Qt::black, 1));
+    m_plot.xAxis->setTickLabelColor(Qt::black);
+    m_plot.yAxis->setTickLabelColor(Qt::black);
+    m_plot.xAxis->grid()->setPen(QPen(QColor(70, 70, 70), 1, Qt::DotLine));
+    m_plot.yAxis->grid()->setPen(QPen(QColor(70, 70, 70), 1, Qt::DotLine));
+    m_plot.xAxis->grid()->setZeroLinePen(Qt::NoPen);
+    m_plot.yAxis->grid()->setZeroLinePen(Qt::NoPen);
+    m_plot.xAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
+    m_plot.yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
+    m_plot.legend->setBrush(QBrush(Qt::white));
+    m_plot.legend->setTextColor(Qt::black);
+    m_title->setTextColor(Qt::black);
+
+    m_plot.setBackground(QBrush(Qt::white));
+    m_plot.axisRect()->setBackground(QBrush(Qt::white));
+
+    m_plot.replot();
 }
 
 QColor ChartWidget::color() const
@@ -96,7 +162,6 @@ void ChartWidget::setChart(const Chart &chart)
         }
         auto *graph = m_plot.addGraph();
         graph->setName(m_channels.at(channelId).name());
-        graph->setAntialiased(true);
         m_graphs.append(graph);
     }
 
@@ -111,9 +176,10 @@ void ChartWidget::setChart(const Chart &chart)
     {
         m_plot.yAxis->setRange(chart.yAxisMin(), chart.yAxisMax());
     }
+    m_title->setText(chart.name());
     m_plot.replot();
-
     m_chart = chart;
+    m_refreshTimer.start();
 }
 
 void ChartWidget::setChannels(const QList<Channel> &channels)
@@ -154,12 +220,17 @@ void ChartWidget::setData(QJsonArray data)
         }
     }
     m_plot.xAxis->setRange(m_dataCount, m_chart.samplesCount(), Qt::AlignRight);
-    m_plot.replot();
     m_dataCount++;
+}
+
+void ChartWidget::refreshChart()
+{
+    m_plot.replot();
 }
 
 void ChartWidget::mouseDoubleClickEvent(QMouseEvent *)
 {
+
 }
 
 bool ChartWidget::eventFilter(QObject *watched, QEvent *event)
@@ -172,11 +243,11 @@ bool ChartWidget::eventFilter(QObject *watched, QEvent *event)
             auto delta = ev->angleDelta().y();
             if(delta > 0)
             {
-                setMinimumHeight(height() + RESIZE_RATIO);
+                setMinimumHeight(height() + YRESIZE_RATIO);
             }
             else if(height() > MIN_HEIGHT)
             {
-                setMinimumHeight(height() - RESIZE_RATIO);
+                setMinimumHeight(height() - YRESIZE_RATIO);
             }
             if(height() < MIN_HEIGHT)
             {
@@ -190,11 +261,11 @@ bool ChartWidget::eventFilter(QObject *watched, QEvent *event)
             auto delta = ev->angleDelta().y();
             if(delta > 0)
             {
-                m_chart.setSamplesCount(m_chart.samplesCount() + XRESIZE_RATION);
+                m_chart.setSamplesCount(m_chart.samplesCount() + XRESIZE_RATIO);
             }
             else if(height() > MIN_HEIGHT)
             {
-                m_chart.setSamplesCount(m_chart.samplesCount() - XRESIZE_RATION);
+                m_chart.setSamplesCount(m_chart.samplesCount() - XRESIZE_RATIO);
             }
             if(m_chart.samplesCount() < MIN_XRANGE)
             {
@@ -227,5 +298,28 @@ void ChartWidget::leaveEvent(QEvent *)
 {
     m_colorAnimation->stop();
     ui->frame->setStyleSheet(QString("background-color: rgb(%1, %2, %3);")
-                            .arg(NORMAL_COLOR.red()).arg(NORMAL_COLOR.green()).arg(NORMAL_COLOR.blue()));
+                             .arg(NORMAL_COLOR.red()).arg(NORMAL_COLOR.green()).arg(NORMAL_COLOR.blue()));
+}
+
+void ChartWidget::setAntialiasing(bool enabled)
+{
+    QFont font;
+    if(enabled)
+    {
+        m_plot.setAntialiasedElements(QCP::aeAll);
+        font.setStyleStrategy(QFont::PreferAntialias);
+    }
+    else
+    {
+        m_plot.setNotAntialiasedElements(QCP::aeAll);
+        QFont font;
+        font.setStyleStrategy(QFont::NoAntialias);
+    }
+    for(auto graph : m_graphs)
+    {
+        graph->setAntialiased(enabled);
+    }
+    m_plot.xAxis->setTickLabelFont(font);
+    m_plot.yAxis->setTickLabelFont(font);
+    m_plot.legend->setFont(font);
 }
