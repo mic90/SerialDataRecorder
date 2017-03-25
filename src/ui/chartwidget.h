@@ -32,7 +32,7 @@ public:
 
 public slots:
     void setColor(QColor color);
-    void setData(QJsonArray data);
+    void setData(QList<QJsonArray> data);
 
 private slots:
     void refreshChart();
@@ -42,7 +42,6 @@ signals:
     void editRequested();
 
 protected:
-    virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
     virtual bool eventFilter(QObject *watched, QEvent *event) override;
     virtual void enterEvent(QEvent *event) override;
     virtual void leaveEvent(QEvent *event) override;
@@ -62,6 +61,9 @@ private:
     long long m_dataCount;
     bool m_pause;
     QTimer m_refreshTimer;
+    QList<QJsonArray> m_buffer;
+    QMutex m_mutex;
+    QList<QColor> m_graphColors;
 };
 
 #endif // CHARTWIDGET_H

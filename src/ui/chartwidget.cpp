@@ -7,13 +7,12 @@
 const int MIN_HEIGHT = 150;
 const int MIN_XRANGE = 100;
 const int YRESIZE_RATIO = 20;
-const int XRESIZE_RATIO = 100;
 const QColor PRESSED_COLOR = QColor(102, 187, 106);
 const QColor NORMAL_COLOR = QColor(230, 230, 230);
 
 const int EXPORT_IMG_QUALITY = 100;
 const int EXPORT_IMG_SIZE_FACTOR = 1;
-const int CHART_REFRESH_INTERVAL = 50;
+const int CHART_REFRESH_INTERVAL = 30;
 
 ChartWidget::ChartWidget(Chart const& chart, QList<Channel> const& channels, QWidget *parent) :
     QWidget(parent),
@@ -27,9 +26,18 @@ ChartWidget::ChartWidget(Chart const& chart, QList<Channel> const& channels, QWi
     ui->setupUi(this);
     setMinimumHeight(chart.minimumHeight());
 
+    //fill graph colors
+    m_graphColors.append(QColor("#03a9f4")); //lightblue
+    m_graphColors.append(QColor("#f44336")); //red
+    m_graphColors.append(QColor("#4caf50")); //green
+    m_graphColors.append(QColor("#ff9800")); //orange
+    m_graphColors.append(QColor("#9c27b0")); //purple
+    m_graphColors.append(QColor("#673ab7")); //deeppurple
+    m_graphColors.append(QColor("#cddc39")); //lime
+    m_graphColors.append(QColor("#b2ff59")); //lightgreen
+
     setChart(m_chart);
 
-    //disable antialiasing
     setAntialiasing(false);
 
     //add chart title
@@ -79,9 +87,9 @@ void ChartWidget::clearData()
 {
     for(auto graph : m_graphs)
     {
-        graph->setData(QVector<double>(), QVector<double>());
+        graph->data()->clear();
     }
-    m_plot.xAxis->setRange(0, m_chart.samplesCount());
+    m_plot.xAxis->setRange(0, m_chart.xAxisRange());
     m_plot.replot();
     m_dataCount = 0;
 }
@@ -105,8 +113,6 @@ void ChartWidget::setDarkTheme()
     m_plot.yAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
     m_plot.xAxis->grid()->setZeroLinePen(Qt::NoPen);
     m_plot.yAxis->grid()->setZeroLinePen(Qt::NoPen);
-    m_plot.xAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
-    m_plot.yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
     m_plot.legend->setBrush(QBrush(QColor(20, 20, 20)));
     m_plot.legend->setTextColor(Qt::white);
     m_title->setTextColor(Qt::white);
@@ -131,8 +137,6 @@ void ChartWidget::setLightTheme()
     m_plot.yAxis->grid()->setPen(QPen(QColor(70, 70, 70), 1, Qt::DotLine));
     m_plot.xAxis->grid()->setZeroLinePen(Qt::NoPen);
     m_plot.yAxis->grid()->setZeroLinePen(Qt::NoPen);
-    m_plot.xAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
-    m_plot.yAxis->setUpperEnding(QCPLineEnding::esSpikeArrow);
     m_plot.legend->setBrush(QBrush(Qt::white));
     m_plot.legend->setTextColor(Qt::black);
     m_title->setTextColor(Qt::black);
@@ -150,35 +154,25 @@ QColor ChartWidget::color() const
 
 void ChartWidget::setChart(const Chart &chart)
 {
-    m_plot.clearGraphs();
-    m_graphs.clear();
-
-    // create graphs and assign data to it:
-    for(auto channelId : chart.channels())
-    {
-        if(channelId > m_channels.size())
-        {
-            continue;
-        }
-        auto *graph = m_plot.addGraph();
-        graph->setName(m_channels.at(channelId).name());
-        m_graphs.append(graph);
-    }
-
     m_plot.xAxis->setLabel(chart.xAxis());
     m_plot.yAxis->setLabel(chart.yAxis());
-    m_plot.xAxis->setRange(m_dataCount, chart.samplesCount(), Qt::AlignRight);
+    m_plot.xAxis->setRange(m_dataCount, chart.xAxisRange(), Qt::AlignRight);
     if(chart.yAxisAutorange())
     {
         m_plot.yAxis->setRange(0, 1);
     }
     else
     {
-        m_plot.yAxis->setRange(chart.yAxisMin(), chart.yAxisMax());
+        auto diff = chart.yAxisMax() - chart.yAxisMin();
+        auto addition = diff * 0.1;
+        m_plot.yAxis->setRange(chart.yAxisMin() - addition, chart.yAxisMax() + addition);
     }
     m_title->setText(chart.name());
     m_plot.replot();
     m_chart = chart;
+
+    setChannels(QList<Channel>() << m_channels);
+
     m_refreshTimer.start();
 }
 
@@ -186,7 +180,32 @@ void ChartWidget::setChannels(const QList<Channel> &channels)
 {
     m_channels.clear();
     m_channels.append(channels);
-    setChart(m_chart);
+    int graphId = -1;
+    for(auto channelId : m_chart.channels())
+    {
+        graphId++;
+        if(channelId >= m_channels.size())
+        {
+            QLOG_WARN() << "Channel id" << channelId << " is out of range";
+            m_plot.removeGraph(graphId);
+            m_graphs.removeAt(graphId);
+            continue;
+        }
+        if(graphId >= m_graphs.size())
+        {
+            auto *graph = m_plot.addGraph();
+            auto color = graphId < m_graphColors.size() ? m_graphColors.at(graphId) : m_graphColors.last();
+            graph->setPen(color);
+            m_graphs.append(graph);
+        }
+        m_graphs.at(graphId)->setName(m_channels.at(channelId).name());
+    }
+    while(graphId != m_graphs.size() - 1)
+    {
+        m_plot.removeGraph(m_graphs.size() - 1);
+        m_graphs.removeLast();
+    }
+    m_plot.replot();
 }
 
 void ChartWidget::setColor(QColor color)
@@ -196,41 +215,49 @@ void ChartWidget::setColor(QColor color)
                              .arg(color.red()).arg(color.green()).arg(color.blue()));
 }
 
-void ChartWidget::setData(QJsonArray data)
+void ChartWidget::setData(QList<QJsonArray> data)
 {
     if(m_pause)
     {
         return;
     }
-
-    auto ids = m_chart.channels();
-    for(int i=0; i<ids.size(); i++)
-    {
-        if(ids.at(i) > data.size())
-        {
-            continue;
-        }
-        m_graphs[i]->addData(m_dataCount, data.at(ids.at(i)).toDouble());
-    }
-    if(m_chart.yAxisAutorange())
-    {
-        for(auto graph : m_graphs)
-        {
-            graph->rescaleValueAxis();
-        }
-    }
-    m_plot.xAxis->setRange(m_dataCount, m_chart.samplesCount(), Qt::AlignRight);
-    m_dataCount++;
+    QMutexLocker locker(&m_mutex);
+    m_buffer.append(data);
 }
 
 void ChartWidget::refreshChart()
 {
-    m_plot.replot();
-}
+    if(m_buffer.isEmpty())
+    {
+        return;
+    }
 
-void ChartWidget::mouseDoubleClickEvent(QMouseEvent *)
-{
-
+    for(auto const& data : m_buffer)
+    {
+        auto ids = m_chart.channels();
+        for(int i=0; i<ids.size(); i++)
+        {
+            if(ids.at(i) >= data.size() || i >= m_graphs.size())
+            {
+                continue;
+            }
+            m_graphs[i]->addData(m_dataCount, data.at(ids.at(i)).toDouble());
+        }
+        if(m_chart.yAxisAutorange())
+        {
+            for(auto graph : m_graphs)
+            {
+                graph->rescaleValueAxis(false, true);
+//                auto diff = chart.yAxisMax() - chart.yAxisMin();
+//                auto addition = diff * 0.1;
+//                m_plot.yAxis->setRange(chart.yAxisMin() - addition, chart.yAxisMax() + addition);
+            }
+        }
+        m_plot.xAxis->setRange(m_dataCount++, m_chart.xAxisRange(), Qt::AlignRight);
+    }
+    QMutexLocker locker(&m_mutex);
+    m_buffer.clear();
+    m_plot.replot(QCustomPlot::rpQueuedReplot);
 }
 
 bool ChartWidget::eventFilter(QObject *watched, QEvent *event)
@@ -259,19 +286,21 @@ bool ChartWidget::eventFilter(QObject *watched, QEvent *event)
         else if(QGuiApplication::queryKeyboardModifiers() & Qt::ShiftModifier)
         {
             auto delta = ev->angleDelta().y();
+            auto range = m_plot.xAxis->range().size();
+            auto diff = range * 0.1;
             if(delta > 0)
             {
-                m_chart.setSamplesCount(m_chart.samplesCount() + XRESIZE_RATIO);
+                m_chart.setXAxisRange(m_chart.xAxisRange() + diff);
             }
             else if(height() > MIN_HEIGHT)
             {
-                m_chart.setSamplesCount(m_chart.samplesCount() - XRESIZE_RATIO);
+                m_chart.setXAxisRange(m_chart.xAxisRange() - diff);
             }
-            if(m_chart.samplesCount() < MIN_XRANGE)
+            if(m_chart.xAxisRange() < MIN_XRANGE)
             {
-                m_chart.setSamplesCount(MIN_XRANGE);
+                m_chart.setXAxisRange(MIN_XRANGE);
             }
-            m_plot.xAxis->setRange(m_dataCount, m_chart.samplesCount(), Qt::AlignRight);
+            m_plot.xAxis->setRange(m_dataCount, m_chart.xAxisRange(), Qt::AlignRight);
             m_plot.replot();
             return true;
         }

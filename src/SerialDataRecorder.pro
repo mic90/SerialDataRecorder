@@ -33,7 +33,8 @@ SOURCES += main.cpp\
     ui/widget_chartconfiguration.cpp \
     ui/window_chartconfiguration.cpp \
     parsers/dataparserfactory.cpp \
-    parsers/asciidataparser.cpp
+    parsers/asciidataparser.cpp \
+    serial/serialthread.cpp
 
 HEADERS  += mainwindow.h \
     project/project.h \
@@ -54,7 +55,8 @@ HEADERS  += mainwindow.h \
     ui/window_chartconfiguration.h \
     parsers/dataparserfactory.h \
     parsers/dataparser.h \
-    parsers/asciidataparser.h
+    parsers/asciidataparser.h \
+    serial/serialthread.h
 
 FORMS    += mainwindow.ui \
     window_project.ui \

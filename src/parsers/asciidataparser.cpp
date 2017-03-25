@@ -1,27 +1,28 @@
 #include "asciidataparser.h"
 #include <QJsonArray>
+#include <QDebug>
+
+const QString DELIM = "\n\r";
 
 AsciiDataParser::AsciiDataParser():
-    m_buffer("")
+    m_buffer(""),
+    m_counter(0)
 {
 
 }
 
-void AsciiDataParser::parse(const QString &data)
+QList<QJsonArray> AsciiDataParser::parse(const QString &data)
 {
-    for(auto const& msg : data.split("\n\r"))
+    m_buffer.append(data);
+    if(!m_buffer.endsWith('\n'))
     {
-        if(msg.isEmpty())
-        {
-            continue;
-        }
-
-        QJsonArray jsonArray;
-        auto trimmed = msg.trimmed();
-        for(auto const& value : trimmed.split(","))
-        {
-            jsonArray.append(value.toDouble());
-        }
-        emit dataReady(jsonArray);
+        return QList<QJsonArray>();
     }
+    QJsonArray jsonArray;
+    for(auto const& value : m_buffer.split(','))
+    {
+        jsonArray.append(value.toDouble());
+    }
+    m_buffer.clear();
+    return QList<QJsonArray>() << jsonArray;
 }

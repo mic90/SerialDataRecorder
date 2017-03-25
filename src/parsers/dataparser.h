@@ -5,18 +5,14 @@
 #include <memory>
 #include <QJsonArray>
 
-class DataParserBase : public QObject
+class DataParserBase
 {
-    Q_OBJECT
     Q_DISABLE_COPY(DataParserBase)
 public:
-    DataParserBase(QObject *parent = nullptr) : QObject(parent) {}
+    DataParserBase() = default;
     ~DataParserBase() = default;
 
-    virtual void parse(const QString&) = 0;
-
-signals:
-    void dataReady(QJsonArray);
+    virtual QList<QJsonArray> parse(const QString&) = 0;
 };
 
 class DataParserPlugin

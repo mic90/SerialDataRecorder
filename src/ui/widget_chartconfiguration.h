@@ -25,9 +25,9 @@ signals:
     void xAxisChanged(QString const& axis);
     void yAxisChanged(QString const& axis);
     void yAxisAutorangeChanged(bool value);
-    void yAxisMinChanged(int value);
-    void yAxisMaxChanged(int value);
-    void samplesCountChanged(int value);
+    void yAxisMinChanged(double value);
+    void yAxisMaxChanged(double value);
+    void xAxisRangeChanged(int value);
     void channelsChanged(QList<int> const& channels);
 
 private slots:
@@ -35,9 +35,9 @@ private slots:
     void on_title_editingFinished();
     void on_xAxis_editingFinished();
     void on_yAxis_editingFinished();
-    void on_samplesCount_valueChanged(int arg1);
-    void on_yAxisMin_valueChanged(int arg1);
-    void on_yAxisMax_valueChanged(int arg1);
+    void on_xAxisRange_valueChanged(int arg1);
+    void on_yAxisMin_valueChanged(double arg1);
+    void on_yAxisMax_valueChanged(double arg1);
 
     void on_channels_clicked(const QModelIndex &index);
 

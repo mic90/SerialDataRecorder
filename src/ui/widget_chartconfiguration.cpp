@@ -22,7 +22,7 @@ void WidgetChartConfiguration::setChart(const Chart &chart)
     ui->xAxis->setText(chart.xAxis());
     ui->yAxis->setText(chart.yAxis());
     ui->autorange->setChecked(chart.yAxisAutorange());
-    ui->samplesCount->setValue(chart.samplesCount());
+    ui->xAxisRange->setValue(chart.xAxisRange());
     ui->yAxisMin->setValue(chart.yAxisMin());
     ui->yAxisMax->setValue(chart.yAxisMax());
     for(int i=0; i<m_channelItems.size(); i++)
@@ -66,17 +66,17 @@ void WidgetChartConfiguration::on_yAxis_editingFinished()
     emit yAxisChanged(ui->yAxis->text());
 }
 
-void WidgetChartConfiguration::on_samplesCount_valueChanged(int value)
+void WidgetChartConfiguration::on_xAxisRange_valueChanged(int value)
 {
-    emit samplesCountChanged(value);
+    emit xAxisRangeChanged(value);
 }
 
-void WidgetChartConfiguration::on_yAxisMin_valueChanged(int value)
+void WidgetChartConfiguration::on_yAxisMin_valueChanged(double value)
 {
     emit yAxisMinChanged(value);
 }
 
-void WidgetChartConfiguration::on_yAxisMax_valueChanged(int value)
+void WidgetChartConfiguration::on_yAxisMax_valueChanged(double value)
 {
     emit yAxisMaxChanged(value);
 }

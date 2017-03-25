@@ -28,8 +28,8 @@ public:
     void setYAxisMin(double yAxisMin);
     double yAxisMax() const;
     void setYAxisMax(double yAxisMax);
-    int samplesCount() const;
-    void setSamplesCount(int samplesCount);
+    int xAxisRange() const;
+    void setXAxisRange(int xAxisRange);
     int minimumHeight() const;
     void setMinimumHeight(int minimumHeight);
 
@@ -43,7 +43,7 @@ private:
     bool m_yAxisAutorange;
     double m_yAxisMin;
     double m_yAxisMax;
-    int m_samplesCount;
+    int m_xAxisRange;
     int m_minimumHeight;
     QList<int> m_channels;
 };

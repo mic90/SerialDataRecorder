@@ -11,6 +11,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     QThread::currentThread()->setObjectName("MainThread");
+
+    qRegisterMetaType<QList<QJsonArray>>();
 }
 
 MainWindow::~MainWindow()
@@ -37,7 +39,6 @@ void MainWindow::on_actionNew_triggered()
     auto newProject = QSharedPointer<Project>(new Project());
     WindowProject *widget = new WindowProject(newProject);
     QMdiSubWindow *wnd = ui->mdiArea->addSubWindow(widget);
-    wnd->setWindowTitle(newProject->path());
     wnd->setAttribute(Qt::WA_DeleteOnClose);
     wnd->setWindowIcon(QIcon());
     wnd->show();
@@ -113,11 +114,9 @@ void MainWindow::on_actionOpen_triggered()
     QLOG_DEBUG() << "Opening project " << project->name();
     WindowProject *widget = new WindowProject(project);
     QMdiSubWindow *wnd = ui->mdiArea->addSubWindow(widget);
-    wnd->setWindowTitle(project->name());
     wnd->setAttribute(Qt::WA_DeleteOnClose);
     wnd->setWindowIcon(QIcon());
     wnd->show();
-
 }
 
 void MainWindow::on_actionExit_triggered()

@@ -5,7 +5,7 @@
 #include <QTableWidgetItem>
 
 #include <project/project.h>
-#include <serial/serialport.h>
+#include <serial/serialthread.h>
 #include <parsers/dataparserfactory.h>
 #include <ui/chartwidget.h>
 #include <ui/variablestablemodel.h>
@@ -48,8 +48,7 @@ signals:
 private:
     Ui::WindowProject *ui;
     QSharedPointer<Project> m_project;
-    QScopedPointer<SerialPort> m_serial;
-    QThread m_serialThread;
+    QScopedPointer<SerialThread> m_serial;
     DataParserFactory m_parserFactory;
 
     QList<ChartWidget*> m_charts;

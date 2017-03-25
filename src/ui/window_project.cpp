@@ -30,14 +30,11 @@ WindowProject::WindowProject(QSharedPointer<Project> project, QWidget *parent) :
     ui->toolBar->addAction(ui->actionCharts);
 
     createCharts(m_project->getCharts(), m_project->getChannels());
-    m_serialThread.setObjectName("SerialThread");
+    setWindowTitle(m_project->name());
 }
 
 WindowProject::~WindowProject()
 {
-    m_serial.reset(); //TODO: Find a way to automatically stop thread and remove pointer
-    m_serialThread.quit();
-    m_serialThread.wait();
     delete ui;
 }
 
@@ -157,26 +154,23 @@ void WindowProject::on_actionConnect_triggered()
         return;
     }
     QLOG_INFO() << "Data parser set to" << m_project->getDataParserName();
-    m_serial.reset(new SerialPort(m_project->serialConfig(), std::move(parser)));
-
-    m_serial->moveToThread(&m_serialThread);
-    connect(this, &WindowProject::startProcessing, m_serial.data(), &SerialPort::process);
-
+    m_serial.reset(new SerialThread(m_project->serialConfig(), std::move(parser)));
+    connect(this, &WindowProject::startProcessing, m_serial.data(), &SerialThread::process);
     bool ret = m_serial->open();
     if(!ret)
     {
         QMessageBox::critical(this, "Error", "Connection failed, can't open serial port");
         return;
     }
-    m_serialThread.start(QThread::HighPriority);
     emit startProcessing();
 
-    ui->actionConnect->setDisabled(ret);
-    ui->actionPause->setDisabled(!ret);
-    ui->actionDisconnect->setDisabled(!ret);
+    ui->actionConnect->setDisabled(true);
+    ui->actionPause->setDisabled(false);
+    ui->actionDisconnect->setDisabled(false);
+    ui->actionSerial_Configuration->setDisabled(true);
     for(auto chartWidget : m_charts)
     {
-        connect(m_serial.data(), &SerialPort::dataReady, chartWidget, &ChartWidget::setData);
+        connect(m_serial.data(), &SerialThread::dataReady, chartWidget, &ChartWidget::setData, Qt::QueuedConnection);
     }
     setWindowTitle(QString("%1 [%2]").arg(m_project->name(), m_project->serialConfig().name()));
 }
@@ -191,18 +185,11 @@ void WindowProject::on_actionPause_triggered()
 
 void WindowProject::on_actionDisconnect_triggered()
 {
-    bool ret = m_serial->close();
-    if(!ret)
-    {
-        QMessageBox::critical(this, "Error", "Can't close serial port");
-        return;
-    }
-    m_serialThread.quit();
-    m_serialThread.wait();
-
-    ui->actionConnect->setDisabled(!ret);
-    ui->actionPause->setDisabled(!ret);
-    ui->actionDisconnect->setDisabled(ret);
+    m_serial->close();
+    ui->actionConnect->setDisabled(false);
+    ui->actionPause->setDisabled(true);
+    ui->actionDisconnect->setDisabled(true);
+    ui->actionSerial_Configuration->setDisabled(false);
     setWindowTitle(m_project->name());
 }
 

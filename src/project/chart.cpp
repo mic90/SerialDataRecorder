@@ -14,7 +14,7 @@ Chart::Chart(const QString &name):
     m_yAxisAutorange(false),
     m_yAxisMin(0.0),
     m_yAxisMax(1.0),
-    m_samplesCount(10000),
+    m_xAxisRange(10000),
     m_minimumHeight(150)
 {
 
@@ -28,7 +28,7 @@ Chart::Chart(const Chart &other)
     m_yAxisAutorange = other.m_yAxisAutorange;
     m_yAxisMin = other.m_yAxisMin;
     m_yAxisMax = other.m_yAxisMax;
-    m_samplesCount = other.m_samplesCount;
+    m_xAxisRange = other.m_xAxisRange;
     m_minimumHeight = other.m_minimumHeight;
     m_channels.append(other.m_channels);
 }
@@ -48,7 +48,7 @@ QJsonObject Chart::toJson() const
         {"yAxisAutorange", m_yAxisAutorange},
         {"yAxisMin", m_yAxisMin},
         {"yAxisMax", m_yAxisMax},
-        {"samples", m_samplesCount},
+        {"samples", m_xAxisRange},
         {"minimumHeight", m_minimumHeight},
         {"channels", channels}
     };
@@ -69,9 +69,9 @@ bool Chart::fromJson(const QJsonObject &obj)
     m_xAxis = obj.value("xAxis").toString();
     m_yAxis = obj.value("yAxis").toString();
     m_yAxisAutorange = obj.value("yAxisAutorange").toBool();
-    m_yAxisMin = obj.value("yAxisMin").toInt();
-    m_yAxisMax = obj.value("yAxisMax").toInt();
-    m_samplesCount = obj.value("samples").toInt();
+    m_yAxisMin = obj.value("yAxisMin").toDouble();
+    m_yAxisMax = obj.value("yAxisMax").toDouble();
+    m_xAxisRange = obj.value("samples").toInt();
     m_minimumHeight = obj.value("minimumHeight").toInt();
     auto channels = obj.value("channels").toArray();
     for(auto const& channel : channels)
@@ -131,14 +131,14 @@ void Chart::setMinimumHeight(int minimumHeight)
     m_minimumHeight = minimumHeight;
 }
 
-int Chart::samplesCount() const
+int Chart::xAxisRange() const
 {
-    return m_samplesCount;
+    return m_xAxisRange;
 }
 
-void Chart::setSamplesCount(int samplesCount)
+void Chart::setXAxisRange(int xAxisRange)
 {
-    m_samplesCount = samplesCount;
+    m_xAxisRange = xAxisRange;
 }
 
 double Chart::yAxisMin() const

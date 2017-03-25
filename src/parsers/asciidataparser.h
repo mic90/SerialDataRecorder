@@ -8,10 +8,11 @@ class AsciiDataParser : public DataParserBase
 {
 public:
     AsciiDataParser();
-    virtual void parse(const QString &) override;
+    virtual QList<QJsonArray> parse(const QString &) override;
 
 private:
     QString m_buffer;
+    long long m_counter;
 };
 
 class AsciiDataParserPlugin : public DataParserPlugin

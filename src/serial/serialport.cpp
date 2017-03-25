@@ -5,9 +5,14 @@
 SerialPort::SerialPort(const SerialPortConfig &config, std::unique_ptr<DataParserBase> parser, QObject *parent) : QObject(parent),
     m_config(config),
     m_parser(parser.release()),
-    m_lastTimestamp(0)
+    m_buffer("")
 {
-    connect(m_parser.get(), &DataParserBase::dataReady, this, &SerialPort::dataReady);
+    qRegisterMetaType<QList<QJsonArray>>("QList<QJsonArray>");
+}
+
+SerialPort::~SerialPort()
+{
+    close();
 }
 
 bool SerialPort::open()
@@ -32,23 +37,32 @@ bool SerialPort::open()
     return true;
 }
 
-bool SerialPort::close()
+void SerialPort::close()
 {
+    if(!m_serial.isOpen())
+    {
+        return;
+    }
+
     m_serial.close();
     QLOG_INFO() << "Serial port" << m_config.name() << "closed";
-    return true;
 }
 
 void SerialPort::process()
 {
     while(m_serial.isOpen())
     {
-        QString data = m_serial.readAll();
-        if(data.isEmpty())
+        if(m_serial.bytesAvailable() <= 0)
         {
+            QThread::usleep(100);
             continue;
         }
-        m_parser->parse(data);
+
+        QString data = m_serial.readLine();
+        auto parsed = m_parser->parse(data);
+        if(!parsed.isEmpty()) {
+            emit dataReady(parsed);
+        }
     }
     QLOG_DEBUG() << "Serial port processing finished";
 }

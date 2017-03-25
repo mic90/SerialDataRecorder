@@ -82,9 +82,8 @@ WindowCharts::WindowCharts(QList<Chart> charts, QList<Channel> channels, QWidget
     connect(ui->chartConfiguration, &WidgetChartConfiguration::yAxisAutorangeChanged, this, &WindowCharts::onYAxisAutorangeChanged);
     connect(ui->chartConfiguration, &WidgetChartConfiguration::yAxisMinChanged, this, &WindowCharts::onYAxisMinChanged);
     connect(ui->chartConfiguration, &WidgetChartConfiguration::yAxisMaxChanged, this, &WindowCharts::onYAxisMaxChanged);
-    connect(ui->chartConfiguration, &WidgetChartConfiguration::samplesCountChanged, this, &WindowCharts::onSamplesCountChanged);
+    connect(ui->chartConfiguration, &WidgetChartConfiguration::xAxisRangeChanged, this, &WindowCharts::onXAxisRangeChanged);
     connect(ui->chartConfiguration, &WidgetChartConfiguration::channelsChanged, this, &WindowCharts::onChannelsChanged);
-
 }
 
 WindowCharts::~WindowCharts()
@@ -137,7 +136,7 @@ void WindowCharts::onYAxisAutorangeChanged(bool enabled)
     m_chartsModel.getChart(index).setYAxisAutorange(enabled);
 }
 
-void WindowCharts::onYAxisMinChanged(int value)
+void WindowCharts::onYAxisMinChanged(double value)
 {
     auto index = ui->charts->selectionModel()->currentIndex();
     if(!index.isValid())
@@ -147,7 +146,7 @@ void WindowCharts::onYAxisMinChanged(int value)
     m_chartsModel.getChart(index).setYAxisMin(value);
 }
 
-void WindowCharts::onYAxisMaxChanged(int value)
+void WindowCharts::onYAxisMaxChanged(double value)
 {
     auto index = ui->charts->selectionModel()->currentIndex();
     if(!index.isValid())
@@ -157,14 +156,14 @@ void WindowCharts::onYAxisMaxChanged(int value)
     m_chartsModel.getChart(index).setYAxisMax(value);
 }
 
-void WindowCharts::onSamplesCountChanged(int value)
+void WindowCharts::onXAxisRangeChanged(int value)
 {
     auto index = ui->charts->selectionModel()->currentIndex();
     if(!index.isValid())
     {
         return;
     }
-    m_chartsModel.getChart(index).setSamplesCount(value);
+    m_chartsModel.getChart(index).setXAxisRange(value);
 }
 
 void WindowCharts::onChannelsChanged(const QList<int> &channels)

@@ -50,9 +50,9 @@ private slots:
     void onXAxisChanged(QString const& name);
     void onYAxisChanged(QString const& name);
     void onYAxisAutorangeChanged(bool enabled);
-    void onYAxisMinChanged(int value);
-    void onYAxisMaxChanged(int value);
-    void onSamplesCountChanged(int value);
+    void onYAxisMinChanged(double value);
+    void onYAxisMaxChanged(double value);
+    void onXAxisRangeChanged(int value);
     void onChannelsChanged(QList<int> const& channels);
 
     void on_ok_clicked();
