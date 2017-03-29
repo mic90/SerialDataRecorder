@@ -1,18 +1,21 @@
 #include "asciidataparser.h"
 #include <QJsonArray>
 #include <QDebug>
-
-const QString DELIM = "\n\r";
+#include <QsLog.h>
 
 AsciiDataParser::AsciiDataParser():
-    m_buffer(""),
-    m_counter(0)
+    m_buffer("")
 {
 
 }
 
 QList<QJsonArray> AsciiDataParser::parse(const QString &data)
 {
+    if(m_buffer.size() > 100)
+    {
+        QLOG_ERROR() << "Buffer is oversized, connection is corrupted!";
+    }
+
     m_buffer.append(data);
     if(!m_buffer.endsWith('\n'))
     {

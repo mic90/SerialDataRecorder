@@ -111,6 +111,9 @@
    </property>
   </action>
   <action name="actionSave">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="res.qrc">
      <normaloff>:/icons/file/file_save_as.png</normaloff>:/icons/file/file_save_as.png</iconset>
@@ -179,6 +182,9 @@
    </property>
   </action>
   <action name="actionExport_CSV">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="res.qrc">
      <normaloff>:/icons/file/table_export.png</normaloff>:/icons/file/table_export.png</iconset>
@@ -188,6 +194,9 @@
    </property>
   </action>
   <action name="actionImport_CSV">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="res.qrc">
      <normaloff>:/icons/file/table_import.png</normaloff>:/icons/file/table_import.png</iconset>
@@ -197,6 +206,9 @@
    </property>
   </action>
   <action name="actionExport_Image">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="res.qrc">
      <normaloff>:/icons/file/layer_export.png</normaloff>:/icons/file/layer_export.png</iconset>

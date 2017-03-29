@@ -17,7 +17,8 @@
 WindowProject::WindowProject(QSharedPointer<Project> project, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::WindowProject),
-    m_project(project)
+    m_project(project),
+    m_hasUnsavedChanges(false)
 {
     ui->setupUi(this);
 
@@ -30,7 +31,9 @@ WindowProject::WindowProject(QSharedPointer<Project> project, QWidget *parent) :
     ui->toolBar->addAction(ui->actionCharts);
 
     createCharts(m_project->getCharts(), m_project->getChannels());
-    setWindowTitle(m_project->name());
+    updateWindowTitle();
+
+    connect(project.data(), &Project::projectChanged, this, &WindowProject::onProjectChanged);
 }
 
 WindowProject::~WindowProject()
@@ -50,15 +53,10 @@ void WindowProject::exportImages(const QString &filePath)
     QString fileBase = fInfo.baseName();
 
     int index = 0;
-    QList<bool> results;
     for(auto chartWidget : m_charts)
     {
         QString path = QString("%1/%2_%3.png").arg(fileDir).arg(fileBase).arg(index++);
-        results.append(chartWidget->exportImage(path));
-    }
-    if(results.contains(false))
-    {
-        QMessageBox::warning(this, "Export failed", "Couldn't export some of the chart images");
+        chartWidget->exportImage(path);
     }
 }
 
@@ -104,6 +102,24 @@ void WindowProject::clearCharts()
     {
         chartWidget->clearData();
     }
+}
+
+void WindowProject::updateWindowTitle()
+{
+    QString asterisk = m_hasUnsavedChanges ? "*" : "";
+    if(m_serial != nullptr && m_serial->isOpen())
+    {
+        setWindowTitle(QString("%1 [%2]%3").arg(m_project->name(), m_project->serialConfig().name(), asterisk));
+    }
+    else
+    {
+        setWindowTitle(QString("%1%2").arg(m_project->name(), asterisk));
+    }
+}
+
+void WindowProject::onProjectChanged()
+{
+    setHasUnsavedChanges(true);
 }
 
 void WindowProject::onChartMinimumHeightChanged(int height)
@@ -172,7 +188,7 @@ void WindowProject::on_actionConnect_triggered()
     {
         connect(m_serial.data(), &SerialThread::dataReady, chartWidget, &ChartWidget::setData, Qt::QueuedConnection);
     }
-    setWindowTitle(QString("%1 [%2]").arg(m_project->name(), m_project->serialConfig().name()));
+    updateWindowTitle();
 }
 
 void WindowProject::on_actionPause_triggered()
@@ -190,7 +206,7 @@ void WindowProject::on_actionDisconnect_triggered()
     ui->actionPause->setDisabled(true);
     ui->actionDisconnect->setDisabled(true);
     ui->actionSerial_Configuration->setDisabled(false);
-    setWindowTitle(m_project->name());
+    updateWindowTitle();
 }
 
 void WindowProject::on_actionSerial_Configuration_triggered()
@@ -243,3 +259,30 @@ void WindowProject::on_actionCharts_triggered()
     }
 }
 
+bool WindowProject::hasUnsavedChanges() const
+{
+    return m_hasUnsavedChanges;
+}
+
+void WindowProject::setHasUnsavedChanges(bool hasUnsavedChanges)
+{
+    m_hasUnsavedChanges = hasUnsavedChanges;
+    updateWindowTitle();
+    emit savePossibleChanged(m_hasUnsavedChanges);
+}
+
+void WindowProject::closeEvent(QCloseEvent *event)
+{
+    if(!m_hasUnsavedChanges)
+    {
+        event->accept();
+        return;
+    }
+    auto ret = QMessageBox::question(this, "Unsaved changes", "Your changes have not been saved.\nAre you sure you want to close the project window ?");
+    if(ret == QMessageBox::Yes)
+    {
+        event->accept();
+        return;
+    }
+    event->ignore();
+}

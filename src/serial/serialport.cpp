@@ -48,6 +48,11 @@ void SerialPort::close()
     QLOG_INFO() << "Serial port" << m_config.name() << "closed";
 }
 
+bool SerialPort::isOpen() const
+{
+    return m_serial.isOpen();
+}
+
 void SerialPort::process()
 {
     while(m_serial.isOpen())

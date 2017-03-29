@@ -18,7 +18,7 @@ public:
     ChartWidget(Chart const& chart, QList<Channel> const& channels, QWidget *parent = 0);
     ~ChartWidget();
 
-    bool exportImage(QString const& filePath);
+    void exportImage(QString const& filePath);
 
     void clearData();
     void setPause(bool enabled);

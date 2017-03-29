@@ -33,6 +33,24 @@ WindowProject *MainWindow::getActiveWidget()
     return widget;
 }
 
+bool MainWindow::saveProject(const QSharedPointer<Project> &project)
+{
+    QLOG_INFO() << "Saving project to" << project->path() << "...";
+    QFile f(project->path());
+    if(!f.open(QIODevice::WriteOnly))
+    {
+        QLOG_ERROR() << "Can't open file" << project->path() << "for saving";
+        return false;
+    }
+    f.write(project->toJson());
+    return true;
+}
+
+void MainWindow::onProjectSavePossible(bool savePossible)
+{
+    ui->actionSave->setEnabled(savePossible);
+}
+
 void MainWindow::on_actionNew_triggered()
 {
     QLOG_DEBUG() << "Creating new project";
@@ -42,6 +60,7 @@ void MainWindow::on_actionNew_triggered()
     wnd->setAttribute(Qt::WA_DeleteOnClose);
     wnd->setWindowIcon(QIcon());
     wnd->show();
+    connect(widget, &WindowProject::savePossibleChanged, this, &MainWindow::onProjectSavePossible);
 }
 
 void MainWindow::on_actionSave_triggered()
@@ -59,11 +78,17 @@ void MainWindow::on_actionSave_triggered()
         {
             return;
         }
-        widget->project()->save(path);
+        widget->project()->setPath(path);
+        if(!saveProject(widget->project()))
+        {
+            QMessageBox::critical(this, "Error", "Couldn't save project to " + path);
+            return;
+        }
         widget->setWindowTitle(widget->project()->name());
         return;
     }
-    widget->project()->save();
+    saveProject(widget->project());
+    widget->setHasUnsavedChanges(false);
 }
 
 void MainWindow::on_actionSave_as_triggered()
@@ -79,8 +104,13 @@ void MainWindow::on_actionSave_as_triggered()
     {
         return;
     }
-    widget->project()->save(path);
-    widget->setWindowTitle(widget->project()->name());
+    widget->project()->setPath(path);
+    if(!saveProject(widget->project()))
+    {
+        QMessageBox::critical(this, "Error", "Can't save project to " + path);
+        return;
+    }
+    widget->setHasUnsavedChanges(false);
 }
 
 void MainWindow::on_actionOpen_triggered()
@@ -103,20 +133,30 @@ void MainWindow::on_actionOpen_triggered()
             return;
         }
     }
-
-    auto project = QSharedPointer<Project>(new Project(filePath));
-    if(!project->load())
+    QLOG_INFO() << "Loading project file" << filePath << "...";
+    QFile f(filePath);
+    if(!f.open(QIODevice::ReadOnly))
     {
-        QMessageBox::critical(this, "Error", "Can't open project file: " + filePath);
+        QString message{"Can't open file " + filePath + " for reading"};
+        QLOG_ERROR() << message;
+        QMessageBox::critical(this, "Error", message);
+        return;
+    }
+    auto json = f.readAll();
+    auto project = QSharedPointer<Project>(new Project(filePath));
+    if(!project->fromJson(json))
+    {
+        QMessageBox::critical(this, "Error", "Can't parse project file");
         return;
     }
 
-    QLOG_DEBUG() << "Opening project " << project->name();
     WindowProject *widget = new WindowProject(project);
     QMdiSubWindow *wnd = ui->mdiArea->addSubWindow(widget);
     wnd->setAttribute(Qt::WA_DeleteOnClose);
     wnd->setWindowIcon(QIcon());
     wnd->show();
+
+    connect(widget, &WindowProject::savePossibleChanged, this, &MainWindow::onProjectSavePossible);
 }
 
 void MainWindow::on_actionExit_triggered()
@@ -143,4 +183,52 @@ void MainWindow::on_actionNight_view_toggled(bool enabled)
         return;
     }
     widget->setNightView(enabled);
+}
+
+void MainWindow::on_mdiArea_subWindowActivated(QMdiSubWindow *subWindow)
+{
+    if(subWindow == nullptr)
+    {
+        ui->actionExport_CSV->setDisabled(true);
+        ui->actionExport_Image->setDisabled(true);
+        ui->actionSave->setDisabled(true);
+        return;
+    }
+    ui->actionExport_CSV->setDisabled(false);
+    ui->actionExport_Image->setDisabled(false);
+    auto widget = qobject_cast<WindowProject*>(subWindow->widget());
+    if(widget == nullptr)
+    {
+        return;
+    }
+    ui->actionSave->setDisabled(!widget->hasUnsavedChanges());
+}
+
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    bool unsavedChanges = false;
+    for(auto subWindow : ui->mdiArea->subWindowList())
+    {
+        auto widget = qobject_cast<WindowProject*>(subWindow->widget());
+        if(widget == nullptr)
+        {
+            continue;
+        }
+        if(widget->hasUnsavedChanges())
+        {
+            unsavedChanges = true;
+            break;
+        }
+    }
+    if(unsavedChanges)
+    {
+        auto ret = QMessageBox::question(this, "Unsaved changes", "Your changes in some files have not been saved.\nAre you sure you want to close the application ?");
+        if(ret == QMessageBox::Yes)
+        {
+            event->accept();
+            return;
+        }
+        event->ignore();
+    }
 }

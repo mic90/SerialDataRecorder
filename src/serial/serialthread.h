@@ -15,6 +15,8 @@ public:
     bool open();
     void close();
 
+    bool isOpen() const;
+
 public slots:
     void process();
 

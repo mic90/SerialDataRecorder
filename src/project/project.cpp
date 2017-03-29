@@ -15,52 +15,6 @@ Project::Project(const QString &path, QObject *parent) : QObject(parent),
 
 }
 
-bool Project::load(const QString &path)
-{
-    setPath(path);
-    return load();
-}
-
-bool Project::load()
-{
-    setPath(m_path);
-    QLOG_INFO() << "Loading project file" << m_path;
-    QFile file(m_path);
-    if(!file.exists() || !file.open(QIODevice::ReadOnly))
-    {
-        QLOG_ERROR() << "Can't open file at" << m_path;
-        return false;
-    }
-    bool ret = fromJson(file.readAll());
-    file.close();
-    return ret;
-}
-
-bool Project::save(const QString &path)
-{
-    setPath(path);
-    return save();
-}
-
-bool Project::save()
-{
-    if(m_path.isEmpty())
-    {
-        return false;
-    }
-
-    QLOG_INFO() << "Saving project to" << m_path << "...";
-    QFile f(m_path);
-    if(!f.open(QIODevice::WriteOnly))
-    {
-        QLOG_ERROR() << "Can't open file" << m_path << "for saving";
-        return false;
-    }
-    f.write(toJson());
-    f.close();
-    return true;
-}
-
 QString Project::path() const
 {
     return m_path;
@@ -87,11 +41,12 @@ SerialPortConfig Project::serialConfig() const
 
 void Project::setSerialConfig(const SerialPortConfig &serialConfig)
 {
-    m_serialConfig = serialConfig;
-    if(!m_path.isEmpty())
+    if(m_serialConfig == serialConfig)
     {
-        save();
+        return;
     }
+    m_serialConfig = serialConfig;
+    emit projectChanged();
 }
 
 QList<Channel> Project::getChannels() const
@@ -99,11 +54,15 @@ QList<Channel> Project::getChannels() const
     return m_channels;
 }
 
-void Project::setChannels(const QList<Channel> &variables)
+void Project::setChannels(const QList<Channel> &channels)
 {
+    if(m_channels == channels)
+    {
+        return;
+    }
     m_channels.clear();
-    m_channels.append(variables);
-    save();
+    m_channels.append(channels);
+    emit projectChanged();
 }
 
 QList<Chart> Project::getCharts() const
@@ -113,9 +72,13 @@ QList<Chart> Project::getCharts() const
 
 void Project::setCharts(const QList<Chart> &charts)
 {
+    if(m_charts == charts)
+    {
+        return;
+    }
     m_charts.clear();
     m_charts.append(charts);
-    save();
+    emit projectChanged();
 }
 
 QByteArray Project::toJson()
@@ -152,9 +115,12 @@ bool Project::fromJson(const QByteArray &data)
         QLOG_ERROR() << "Root object is empty";
         return false;
     }
+    m_name = root.value("name").toString();
     m_dataParserName = root.value("parser").toString();
     QJsonObject serialConfig = root.value("serial").toObject();
-    m_serialConfig.fromJson(serialConfig);
+    if(!m_serialConfig.fromJson(serialConfig)) {
+        return false;
+    }
     QJsonArray channels = root.value("channels").toArray();
     for(auto const& jsonChannel : channels)
     {
@@ -162,6 +128,10 @@ bool Project::fromJson(const QByteArray &data)
         if(newChannel.fromJson(jsonChannel.toObject()))
         {
             m_channels.append(newChannel);
+        }
+        else
+        {
+            return false;
         }
     }
     QJsonArray charts = root.value("charts").toArray();
@@ -171,6 +141,10 @@ bool Project::fromJson(const QByteArray &data)
         if(newChart.fromJson(jsonChart.toObject()))
         {
             m_charts.append(newChart);
+        }
+        else
+        {
+            return false;
         }
     }
     return true;
@@ -183,9 +157,10 @@ QString Project::getDataParserName() const
 
 void Project::setDataParserName(const QString &dataParserName)
 {
-    m_dataParserName = dataParserName;
-    if(!m_path.isEmpty())
+    if(m_dataParserName == dataParserName)
     {
-        save();
+        return;
     }
+    m_dataParserName = dataParserName;
+    emit projectChanged();
 }

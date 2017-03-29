@@ -16,10 +16,8 @@ public:
     Project(const QString& path = "", QObject *parent = 0);
     ~Project() = default;
 
-    bool load(const QString& path);
-    bool load();
-    bool save(const QString& path);
-    bool save();
+    QByteArray toJson();
+    bool fromJson(const QByteArray& data);
 
     QString path() const;
     void setPath(const QString &path);
@@ -38,10 +36,7 @@ public:
 signals:
     void pathChanged(const QString& path);
     void nameChanged(const QString& path);
-
-private:
-    QByteArray toJson();
-    bool fromJson(const QByteArray& data);
+    void projectChanged();
 
 private:
     QString m_path;

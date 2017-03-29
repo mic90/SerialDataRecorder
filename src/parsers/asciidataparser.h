@@ -12,7 +12,6 @@ public:
 
 private:
     QString m_buffer;
-    long long m_counter;
 };
 
 class AsciiDataParserPlugin : public DataParserPlugin

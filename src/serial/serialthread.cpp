@@ -29,6 +29,11 @@ void SerialThread::close()
     m_port->close();
 }
 
+bool SerialThread::isOpen() const
+{
+    return m_port->isOpen();
+}
+
 void SerialThread::process()
 {
     emit startSerialProcessing();

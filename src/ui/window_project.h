@@ -8,7 +8,6 @@
 #include <serial/serialthread.h>
 #include <parsers/dataparserfactory.h>
 #include <ui/chartwidget.h>
-#include <ui/variablestablemodel.h>
 
 namespace Ui {
 class WindowProject;
@@ -27,12 +26,20 @@ public:
     void exportImages(QString const& filePath);
     void setNightView(bool enabled);
 
+    bool hasUnsavedChanges() const;
+    void setHasUnsavedChanges(bool hasUnsavedChanges);
+
+protected:
+    virtual void closeEvent(QCloseEvent *event) override;
+
 private:
     void createChart(Chart const& chart, QList<Channel> const& channels);
     void createCharts(QList<Chart> const& charts, QList<Channel> const& channels);
     void clearCharts();
+    void updateWindowTitle();
 
 private slots:
+    void onProjectChanged();
     void onChartMinimumHeightChanged(int);
     void onChartEditRequested();
     void on_actionConnect_triggered();
@@ -44,14 +51,16 @@ private slots:
 
 signals:
     void startProcessing();
+    void savePossibleChanged(bool);
 
 private:
     Ui::WindowProject *ui;
     QSharedPointer<Project> m_project;
     QScopedPointer<SerialThread> m_serial;
     DataParserFactory m_parserFactory;
-
     QList<ChartWidget*> m_charts;
+
+    bool m_hasUnsavedChanges;
 };
 
 #endif // WINDOW_PROJECT_H

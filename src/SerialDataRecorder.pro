@@ -26,7 +26,6 @@ SOURCES += main.cpp\
     ui/chartwidget.cpp \
     ui/resizablescrollarea.cpp \
     external/qcustomplot/qcustomplot.cpp \
-    ui/variablestablemodel.cpp \
     ui/window_channels.cpp \
     ui/window_charts.cpp \
     project/channel.cpp \
@@ -47,7 +46,6 @@ HEADERS  += mainwindow.h \
     ui/chartwidget.h \
     ui/resizablescrollarea.h \
     external/qcustomplot/qcustomplot.h \
-    ui/variablestablemodel.h \
     ui/window_channels.h \
     ui/window_charts.h \
     project/channel.h \

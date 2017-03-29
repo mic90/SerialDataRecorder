@@ -33,6 +33,19 @@ Chart::Chart(const Chart &other)
     m_channels.append(other.m_channels);
 }
 
+bool Chart::operator ==(const Chart &other)
+{
+    return m_name == other.m_name &&
+            m_xAxis == other.m_xAxis &&
+            m_yAxis == other.m_yAxis &&
+            m_yAxisAutorange == other.m_yAxisAutorange &&
+            m_yAxisMin == other.m_yAxisMin &&
+            m_yAxisMax == other.m_yAxisMax &&
+            m_xAxisRange == other.m_xAxisRange &&
+            m_minimumHeight == other.m_minimumHeight &&
+            m_channels == other.m_channels;
+}
+
 QJsonObject Chart::toJson() const
 {
     QJsonArray channels;
@@ -57,7 +70,8 @@ QJsonObject Chart::toJson() const
 
 bool Chart::fromJson(const QJsonObject &obj)
 {
-    if(!obj.contains("name") || !obj.contains("xAxis")
+    if(!obj.contains("name")
+            || !obj.contains("xAxis")
             || !obj.contains("yAxis") || !obj.contains("yAxisAutorange")
             || !obj.contains("yAxisMin") || !obj.contains("yAxisMax")
             || !obj.contains("samples") || !obj.contains("minimumHeight")

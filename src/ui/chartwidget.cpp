@@ -12,7 +12,7 @@ const QColor NORMAL_COLOR = QColor(230, 230, 230);
 
 const int EXPORT_IMG_QUALITY = 100;
 const int EXPORT_IMG_SIZE_FACTOR = 1;
-const int CHART_REFRESH_INTERVAL = 30;
+const int CHART_REFRESH_INTERVAL = 20;
 
 ChartWidget::ChartWidget(Chart const& chart, QList<Channel> const& channels, QWidget *parent) :
     QWidget(parent),
@@ -71,16 +71,13 @@ ChartWidget::~ChartWidget()
     delete ui;
 }
 
-bool ChartWidget::exportImage(const QString &filePath)
+void ChartWidget::exportImage(const QString &filePath)
 {
+    m_refreshTimer.stop();
     QLOG_INFO() << "Saving chart image to" << filePath;
-    setAntialiasing(true);
-    m_plot.replot();
-    bool ok = m_plot.savePng(filePath, m_plot.width()*EXPORT_IMG_SIZE_FACTOR,
+    m_plot.savePng(filePath, m_plot.width()*EXPORT_IMG_SIZE_FACTOR,
                           m_plot.height()*EXPORT_IMG_SIZE_FACTOR, EXPORT_IMG_SIZE_FACTOR, EXPORT_IMG_QUALITY);
-    setAntialiasing(false);
-    m_plot.replot();
-    return ok;
+    m_refreshTimer.start();
 }
 
 void ChartWidget::clearData()
@@ -109,6 +106,8 @@ void ChartWidget::setDarkTheme()
     m_plot.yAxis->setSubTickPen(QPen(Qt::white, 1));
     m_plot.xAxis->setTickLabelColor(Qt::white);
     m_plot.yAxis->setTickLabelColor(Qt::white);
+    m_plot.xAxis->setLabelColor(Qt::white);
+    m_plot.yAxis->setLabelColor(Qt::white);
     m_plot.xAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
     m_plot.yAxis->grid()->setPen(QPen(QColor(140, 140, 140), 1, Qt::DotLine));
     m_plot.xAxis->grid()->setZeroLinePen(Qt::NoPen);
@@ -133,6 +132,8 @@ void ChartWidget::setLightTheme()
     m_plot.yAxis->setSubTickPen(QPen(Qt::black, 1));
     m_plot.xAxis->setTickLabelColor(Qt::black);
     m_plot.yAxis->setTickLabelColor(Qt::black);
+    m_plot.xAxis->setLabelColor(Qt::black);
+    m_plot.yAxis->setLabelColor(Qt::black);
     m_plot.xAxis->grid()->setPen(QPen(QColor(70, 70, 70), 1, Qt::DotLine));
     m_plot.yAxis->grid()->setPen(QPen(QColor(70, 70, 70), 1, Qt::DotLine));
     m_plot.xAxis->grid()->setZeroLinePen(Qt::NoPen);
@@ -227,6 +228,8 @@ void ChartWidget::setData(QList<QJsonArray> data)
 
 void ChartWidget::refreshChart()
 {
+    QMutexLocker locker(&m_mutex);
+
     if(m_buffer.isEmpty())
     {
         return;
@@ -248,16 +251,12 @@ void ChartWidget::refreshChart()
             for(auto graph : m_graphs)
             {
                 graph->rescaleValueAxis(false, true);
-//                auto diff = chart.yAxisMax() - chart.yAxisMin();
-//                auto addition = diff * 0.1;
-//                m_plot.yAxis->setRange(chart.yAxisMin() - addition, chart.yAxisMax() + addition);
             }
         }
         m_plot.xAxis->setRange(m_dataCount++, m_chart.xAxisRange(), Qt::AlignRight);
     }
-    QMutexLocker locker(&m_mutex);
     m_buffer.clear();
-    m_plot.replot(QCustomPlot::rpQueuedReplot);
+    m_plot.replot(QCustomPlot::rpImmediateRefresh);
 }
 
 bool ChartWidget::eventFilter(QObject *watched, QEvent *event)

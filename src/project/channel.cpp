@@ -5,10 +5,9 @@ Channel::Channel() : Channel("", -1)
 {
 }
 
-Channel::Channel(const QString &name, int id, const QVariant &value):
+Channel::Channel(const QString &name, int id):
     m_id(id),
-    m_name(name),
-    m_value(value)
+    m_name(name)
 {
 }
 
@@ -16,7 +15,12 @@ Channel::Channel(const Channel &other)
 {
     m_id = other.m_id;
     m_name = other.m_name;
-    m_value = other.m_value;
+}
+
+bool Channel::operator ==(const Channel &other)
+{
+    return m_id == other.m_id &&
+            m_name == other.m_name;
 }
 
 QJsonObject Channel::toJson() const
@@ -58,14 +62,4 @@ QString Channel::name() const
 void Channel::setName(const QString &name)
 {
     m_name = name;
-}
-
-QVariant Channel::value() const
-{
-    return m_value;
-}
-
-void Channel::setValue(const QVariant &value)
-{
-    m_value = value;
 }

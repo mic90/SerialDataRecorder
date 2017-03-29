@@ -12,6 +12,8 @@ public:
     QJsonObject toJson();
     bool fromJson(const QJsonObject& json);
 
+    bool operator ==(SerialPortConfig const& other);
+
     QString name() const;
     void setName(const QString &name);
     int baudRate() const;

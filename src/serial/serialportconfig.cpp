@@ -26,7 +26,12 @@ QJsonObject SerialPortConfig::toJson()
 
 bool SerialPortConfig::fromJson(const QJsonObject &json)
 {
-    if(json.isEmpty()) {
+    if(!json.contains("name")
+            || !json.contains("baudRate")
+            || !json.contains("dataBits")
+            || !json.contains("parity")
+            || !json.contains("stopBits")
+            || !json.contains("flowControl")) {
         return false;
     }
     m_name = json.value("name").toString();
@@ -36,6 +41,16 @@ bool SerialPortConfig::fromJson(const QJsonObject &json)
     m_stopBits = json.value("stopBits").toInt();
     m_flowControl = json.value("flowControl").toInt();
     return true;
+}
+
+bool SerialPortConfig::operator ==(const SerialPortConfig &other)
+{
+    return m_name == other.m_name &&
+            m_baudRate == other.m_baudRate &&
+            m_dataBits == other.m_dataBits &&
+            m_parity == other.m_parity &&
+            m_stopBits == other.m_stopBits &&
+            m_flowControl == other.m_flowControl;
 }
 
 QString SerialPortConfig::name() const

@@ -10,8 +10,9 @@ public:
     Chart();
     explicit Chart(QString const& name);
     Chart(Chart const& other);
-
     ~Chart() = default;
+
+    bool operator ==(Chart const& other);
 
     QJsonObject toJson() const;
     bool fromJson(QJsonObject const& obj);
