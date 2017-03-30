@@ -7,11 +7,11 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    m_initialized(false)
 {
     ui->setupUi(this);
     QThread::currentThread()->setObjectName("MainThread");
-
     qRegisterMetaType<QList<QJsonArray>>();
 }
 
@@ -22,12 +22,13 @@ MainWindow::~MainWindow()
 
 WindowProject *MainWindow::getActiveWidget()
 {
-    QMdiSubWindow *wnd = ui->mdiArea->activeSubWindow();
+    QMdiSubWindow *wnd = ui->mdiArea->currentSubWindow();
     if(wnd == nullptr) {
         return nullptr;
     }
     WindowProject *widget = qobject_cast<WindowProject*>(wnd->widget());
     if(widget == nullptr) {
+        QLOG_ERROR() << "Unknown window widget";
         return nullptr;
     }
     return widget;
@@ -44,6 +45,43 @@ bool MainWindow::saveProject(const QSharedPointer<Project> &project)
     }
     f.write(project->toJson());
     return true;
+}
+
+bool MainWindow::openProject(const QString &path)
+{
+    QLOG_INFO() << "Loading project file" << path << "...";
+    QFile f(path);
+    if(!f.open(QIODevice::ReadOnly))
+    {
+        QLOG_ERROR() << "Can't open file " << path << " for reading";
+        return false;
+    }
+    auto json = f.readAll();
+    auto project = QSharedPointer<Project>(new Project(path));
+    if(!project->fromJson(json))
+    {
+        QLOG_ERROR() << "Can't parse project file";
+        return false;
+    }
+
+    WindowProject *widget = new WindowProject(project);
+    QMdiSubWindow *wnd = ui->mdiArea->addSubWindow(widget);
+    wnd->setAttribute(Qt::WA_DeleteOnClose);
+    wnd->setWindowIcon(QIcon());
+    wnd->showMaximized();
+    connect(widget, &WindowProject::savePossibleChanged, this, &MainWindow::onProjectSavePossible);
+
+    return true;
+}
+
+void MainWindow::loadLastUsedProjects()
+{
+    QSettings settings("settings.ini", QSettings::IniFormat);
+    auto paths = settings.value("openedProjects").toStringList();
+    for(auto const& path : paths)
+    {
+        openProject(path);
+    }
 }
 
 void MainWindow::onProjectSavePossible(bool savePossible)
@@ -68,6 +106,7 @@ void MainWindow::on_actionSave_triggered()
     WindowProject *widget = getActiveWidget();
     if(widget == nullptr)
     {
+        QLOG_ERROR() << "Can't save project, no active window";
         return;
     }
     if(widget->project()->path().isEmpty())
@@ -133,30 +172,11 @@ void MainWindow::on_actionOpen_triggered()
             return;
         }
     }
-    QLOG_INFO() << "Loading project file" << filePath << "...";
-    QFile f(filePath);
-    if(!f.open(QIODevice::ReadOnly))
-    {
-        QString message{"Can't open file " + filePath + " for reading"};
-        QLOG_ERROR() << message;
-        QMessageBox::critical(this, "Error", message);
-        return;
-    }
-    auto json = f.readAll();
-    auto project = QSharedPointer<Project>(new Project(filePath));
-    if(!project->fromJson(json))
-    {
-        QMessageBox::critical(this, "Error", "Can't parse project file");
-        return;
-    }
 
-    WindowProject *widget = new WindowProject(project);
-    QMdiSubWindow *wnd = ui->mdiArea->addSubWindow(widget);
-    wnd->setAttribute(Qt::WA_DeleteOnClose);
-    wnd->setWindowIcon(QIcon());
-    wnd->show();
-
-    connect(widget, &WindowProject::savePossibleChanged, this, &MainWindow::onProjectSavePossible);
+    if(!openProject(filePath))
+    {
+        QMessageBox::critical(this, "Error", "Can't open project file " + filePath);
+    }
 }
 
 void MainWindow::on_actionExit_triggered()
@@ -208,6 +228,7 @@ void MainWindow::on_mdiArea_subWindowActivated(QMdiSubWindow *subWindow)
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     bool unsavedChanges = false;
+    QStringList openedPaths;
     for(auto subWindow : ui->mdiArea->subWindowList())
     {
         auto widget = qobject_cast<WindowProject*>(subWindow->widget());
@@ -218,8 +239,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
         if(widget->hasUnsavedChanges())
         {
             unsavedChanges = true;
-            break;
         }
+        openedPaths.append(widget->project()->path());
     }
     if(unsavedChanges)
     {
@@ -227,8 +248,26 @@ void MainWindow::closeEvent(QCloseEvent *event)
         if(ret == QMessageBox::Yes)
         {
             event->accept();
-            return;
         }
-        event->ignore();
+        else
+        {
+            event->ignore();
+        }
     }
+    if(event->isAccepted())
+    {
+        QSettings settings("settings.ini", QSettings::IniFormat);
+        settings.setValue("openedProjects", openedPaths);
+    }
+}
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
+    if(m_initialized)
+    {
+        return;
+    }
+    loadLastUsedProjects();
+    m_initialized = true;
 }

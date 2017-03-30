@@ -17,10 +17,13 @@ public:
 
 protected:
     virtual void closeEvent(QCloseEvent *event) override;
+    virtual void showEvent(QShowEvent *event) override;
 
 private:
     WindowProject *getActiveWidget();
     bool saveProject(QSharedPointer<Project> const& project);
+    bool openProject(QString const& path);
+    void loadLastUsedProjects();
 
 private slots:
     void onProjectSavePossible(bool);
@@ -35,6 +38,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    bool m_initialized;
 };
 
 #endif // MAINWINDOW_H
