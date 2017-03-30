@@ -12,7 +12,7 @@ const QColor NORMAL_COLOR = QColor(230, 230, 230);
 
 const int EXPORT_IMG_QUALITY = 100;
 const int EXPORT_IMG_SIZE_FACTOR = 1;
-const int CHART_REFRESH_INTERVAL = 20;
+const int CHART_REFRESH_INTERVAL = 60;
 
 ChartWidget::ChartWidget(Chart const& chart, QList<Channel> const& channels, QWidget *parent) :
     QWidget(parent),
