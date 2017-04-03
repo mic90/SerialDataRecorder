@@ -16,11 +16,18 @@ QList<QJsonArray> AsciiDataParser::parse(const QString &data)
     {
         return QList<QJsonArray>();
     }
-    QJsonArray jsonArray;
-    for(auto const& value : m_buffer.split(','))
+    QList<QJsonArray> dataList;
+    for(auto const& line : m_buffer.split('\n'))
     {
-        jsonArray.append(value.toDouble());
+        if(line.isEmpty()) continue;
+        QJsonArray jsonArray;
+        for(auto const& value : line.split(','))
+        {
+            jsonArray.append(value.toDouble());
+        }
+        dataList.append(jsonArray);
     }
+
     m_buffer.clear();
-    return QList<QJsonArray>() << jsonArray;
+    return dataList;
 }
