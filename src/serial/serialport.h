@@ -15,11 +15,15 @@ public:
 
     bool open();
     void close();
+    void setPause(bool pause);
 
     bool isOpen() const;
 
 public slots:
     void process();
+
+private slots:
+    void onSerialError(QSerialPort::SerialPortError);
 
 signals:
     void dataReady(QList<QJsonArray>);
@@ -29,6 +33,7 @@ private:
     QSerialPort m_serial;
     std::unique_ptr<DataParserBase> m_parser;
     QString m_buffer;
+    bool m_pause;
 };
 
 #endif // SERIALPORT_H

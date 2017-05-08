@@ -36,6 +36,10 @@ private slots:
     void on_actionNight_view_toggled(bool arg1);
     void on_mdiArea_subWindowActivated(QMdiSubWindow *arg1);
 
+    void on_actionExport_CSV_triggered();
+
+    void on_actionImport_CSV_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool m_initialized;

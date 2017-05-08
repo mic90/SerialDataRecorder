@@ -10,7 +10,6 @@ DataParserFactory::DataParserFactory(QObject *parent) : QObject(parent)
 
 DataParserFactory::~DataParserFactory()
 {
-
 }
 
 QStringList DataParserFactory::getParsersNames() const

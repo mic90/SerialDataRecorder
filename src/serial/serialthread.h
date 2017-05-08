@@ -14,6 +14,7 @@ public:
 
     bool open();
     void close();
+    void setPause(bool pause);
 
     bool isOpen() const;
 

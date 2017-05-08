@@ -5,7 +5,8 @@
 SerialPort::SerialPort(const SerialPortConfig &config, std::unique_ptr<DataParserBase> parser, QObject *parent) : QObject(parent),
     m_config(config),
     m_parser(parser.release()),
-    m_buffer("")
+    m_buffer(""),
+    m_pause(false)
 {
     qRegisterMetaType<QList<QJsonArray>>("QList<QJsonArray>");
 }
@@ -34,6 +35,7 @@ bool SerialPort::open()
     m_serial.setFlowControl(QSerialPort::NoFlowControl);
     m_serial.setParity(QSerialPort::NoParity);
     QLOG_INFO() << "Serial port" << m_config.name() << "opened!";
+    connect(&m_serial, &QSerialPort::errorOccurred, this, &SerialPort::onSerialError);
     return true;
 }
 
@@ -48,6 +50,11 @@ void SerialPort::close()
     QLOG_INFO() << "Serial port" << m_config.name() << "closed";
 }
 
+void SerialPort::setPause(bool pause)
+{
+    m_pause = pause;
+}
+
 bool SerialPort::isOpen() const
 {
     return m_serial.isOpen();
@@ -57,17 +64,31 @@ void SerialPort::process()
 {
     while(m_serial.isOpen())
     {
+        qDebug() << "Loop started";
+        m_serial.waitForReadyRead();
         if(m_serial.bytesAvailable() <= 0)
         {
             QThread::usleep(100);
             continue;
         }
 
-        QString data = m_serial.readLine();
+        QString data = QString::fromUtf8(m_serial.readLine());
+        if(m_pause)
+        {
+            continue;
+        }
         auto parsed = m_parser->parse(data);
+        qDebug() << "Parsing finished";
         if(!parsed.isEmpty()) {
             emit dataReady(parsed);
         }
+        QThread::usleep(100);
+        qDebug() << "Loop finished";
     }
     QLOG_DEBUG() << "Serial port processing finished";
+}
+
+void SerialPort::onSerialError(QSerialPort::SerialPortError e)
+{
+    QLOG_ERROR() << "Serial port error:" << e;
 }

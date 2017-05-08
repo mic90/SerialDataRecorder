@@ -191,8 +191,12 @@ void MainWindow::on_actionExport_Image_triggered()
     {
         return;
     }
-    QString filePath = QFileDialog::getSaveFileName(this, "Save chart images", QString(), "Images (*.png)");
-    widget->exportImages(filePath);
+    QString path = QFileDialog::getSaveFileName(this, "Save chart images", QString(), "Images (*.png)");
+    if(path.isEmpty())
+    {
+        return;
+    }
+    widget->exportImages(path);
 }
 
 void MainWindow::on_actionNight_view_toggled(bool enabled)
@@ -270,4 +274,27 @@ void MainWindow::showEvent(QShowEvent *event)
     }
     loadLastUsedProjects();
     m_initialized = true;
+}
+
+void MainWindow::on_actionExport_CSV_triggered()
+{
+    WindowProject *widget = getActiveWidget();
+    if(widget == nullptr)
+    {
+        return;
+    }
+    widget->setPause(true);
+    QString path = QFileDialog::getSaveFileName(this, "Export to CSV", qApp->applicationDirPath(),  "CSV files (*.csv)");
+    if(path.isEmpty())
+    {
+        widget->setPause(false);
+        return;
+    }
+    widget->exportToFile(path);
+    widget->setPause(false);
+}
+
+void MainWindow::on_actionImport_CSV_triggered()
+{
+
 }

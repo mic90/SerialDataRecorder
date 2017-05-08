@@ -13,6 +13,7 @@
 #include <ui/window_charts.h>
 #include <ui/window_chartconfiguration.h>
 #include <parsers/dataparserfactory.h>
+#include <csv/csvexporter.h>
 
 WindowProject::WindowProject(QSharedPointer<Project> project, QWidget *parent) :
     QMainWindow(parent),
@@ -60,6 +61,14 @@ void WindowProject::exportImages(const QString &filePath)
     }
 }
 
+void WindowProject::exportToFile(const QString &filePath)
+{
+    if(!CsvExporter::exportToFile(m_data, filePath))
+    {
+        QMessageBox::critical(this, "Export error", "Export to csv has failed");
+    }
+}
+
 void WindowProject::setNightView(bool enabled)
 {
     for(auto chartWidget : m_charts)
@@ -75,6 +84,15 @@ void WindowProject::setNightView(bool enabled)
     }
 }
 
+void WindowProject::setPause(bool pause)
+{
+    m_serial->setPause(pause);
+    for(auto chartWidget : m_charts)
+    {
+        chartWidget->setPause(pause);
+    }
+}
+
 void WindowProject::createChart(const Chart &chart, const QList<Channel> &channels)
 {
     ChartWidget *widget = new ChartWidget(chart, channels, this);
@@ -86,6 +104,7 @@ void WindowProject::createChart(const Chart &chart, const QList<Channel> &channe
 
 void WindowProject::createCharts(const QList<Chart> &charts, QList<Channel> const& channels)
 {
+    m_data.setHeader(channels);
     while(m_charts.size() > 0)
     {
         delete m_charts.takeFirst();
@@ -102,6 +121,7 @@ void WindowProject::clearCharts()
     {
         chartWidget->clearData();
     }
+    m_data.clear();
 }
 
 void WindowProject::updateWindowTitle()
@@ -186,13 +206,15 @@ void WindowProject::on_actionConnect_triggered()
     ui->actionSerial_Configuration->setDisabled(true);
     for(auto chartWidget : m_charts)
     {
-        connect(m_serial.data(), &SerialThread::dataReady, chartWidget, &ChartWidget::setData, Qt::QueuedConnection);
+        connect(m_serial.data(), &SerialThread::dataReady, chartWidget, &ChartWidget::setData);
     }
+    connect(m_serial.data(), &SerialThread::dataReady, &m_data, &CsvData::addData);
     updateWindowTitle();
 }
 
 void WindowProject::on_actionPause_triggered()
 {
+    m_serial->setPause(ui->actionPause->isChecked());
     for(auto chartWidget : m_charts)
     {
         chartWidget->setPause(ui->actionPause->isChecked());
@@ -230,6 +252,7 @@ void WindowProject::on_actionChannels_triggered()
             chart->setChannels(channels);
         }
         m_project->setChannels(channels);
+        m_data.setHeader(channels);
     }
 }
 

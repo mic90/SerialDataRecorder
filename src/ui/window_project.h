@@ -8,6 +8,7 @@
 #include <serial/serialthread.h>
 #include <parsers/dataparserfactory.h>
 #include <ui/chartwidget.h>
+#include <csv/csvdata.h>
 
 namespace Ui {
 class WindowProject;
@@ -24,7 +25,10 @@ public:
     QSharedPointer<Project> project() const;
 
     void exportImages(QString const& filePath);
+    void exportToFile(QString const& filePath);
     void setNightView(bool enabled);
+
+    void setPause(bool pause);
 
     bool hasUnsavedChanges() const;
     void setHasUnsavedChanges(bool hasUnsavedChanges);
@@ -59,6 +63,7 @@ private:
     QScopedPointer<SerialThread> m_serial;
     DataParserFactory m_parserFactory;
     QList<ChartWidget*> m_charts;
+    CsvData m_data;
 
     bool m_hasUnsavedChanges;
 };

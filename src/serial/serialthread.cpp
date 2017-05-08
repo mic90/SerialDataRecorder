@@ -29,6 +29,11 @@ void SerialThread::close()
     m_port->close();
 }
 
+void SerialThread::setPause(bool pause)
+{
+    m_port->setPause(pause);
+}
+
 bool SerialThread::isOpen() const
 {
     return m_port->isOpen();

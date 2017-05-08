@@ -13,6 +13,7 @@ const QColor NORMAL_COLOR = QColor(230, 230, 230);
 const int EXPORT_IMG_QUALITY = 100;
 const int EXPORT_IMG_SIZE_FACTOR = 1;
 const int CHART_REFRESH_INTERVAL = 60;
+const int MAX_DATA_COUNT = 1000000;
 
 ChartWidget::ChartWidget(Chart const& chart, QList<Channel> const& channels, QWidget *parent) :
     QWidget(parent),
@@ -243,6 +244,11 @@ void ChartWidget::refreshChart()
             if(ids.at(i) >= data.size() || i >= m_graphs.size())
             {
                 continue;
+            }
+            if(m_graphs[i]->dataCount() >= MAX_DATA_COUNT)
+            {
+                double sortKey = m_graphs[i]->data()->begin()->sortKey();
+                m_graphs[i]->data()->remove(sortKey);
             }
             m_graphs[i]->addData(m_dataCount, data.at(ids.at(i)).toDouble());
         }

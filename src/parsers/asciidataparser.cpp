@@ -2,11 +2,14 @@
 #include <QJsonArray>
 #include <QDebug>
 #include <QsLog.h>
+#include <QRegularExpression>
+#include <QRegularExpressionMatch>
+
+QList<QChar> allowedChars{'0','1','2','3','4','5','6','7','8','9','-','+','e','.'};
 
 AsciiDataParser::AsciiDataParser():
     m_buffer("")
 {
-
 }
 
 QList<QJsonArray> AsciiDataParser::parse(const QString &data)
@@ -17,15 +20,32 @@ QList<QJsonArray> AsciiDataParser::parse(const QString &data)
         return QList<QJsonArray>();
     }
     QList<QJsonArray> dataList;
-    for(auto const& line : m_buffer.split('\n'))
+
+    qDebug() << m_buffer;
+    for(QString const& line : m_buffer.split('\n', QString::SkipEmptyParts))
     {
         if(line.isEmpty()) continue;
         QJsonArray jsonArray;
-        for(auto const& value : line.split(','))
+        QString tempValue;
+
+        for(int i=0; i<line.length(); i++)
         {
-            jsonArray.append(value.toDouble());
+            if(line.at(i) != ',' && allowedChars.contains(line.at(i)))
+            {
+                tempValue.append(line.at(i));
+            }
+            if((line.at(i) == ',' || i == line.length() -1) && !tempValue.isEmpty())
+            {
+                //delimiter reached, convert to double
+                double value = tempValue.toDouble();
+                jsonArray.append(value);
+                tempValue = "";
+            }
         }
-        dataList.append(jsonArray);
+        if(!jsonArray.isEmpty())
+        {
+            dataList.append(jsonArray);
+        }
     }
 
     m_buffer.clear();
