@@ -16,11 +16,11 @@ class WindowConfiguration : public QDialog
     Q_OBJECT
     Q_DISABLE_COPY(WindowConfiguration)
 public:
-    WindowConfiguration(QSharedPointer<Project> project, QWidget *parent = 0);
+    WindowConfiguration(QSharedPointer<Project> project, QStringList const& parserNames, QWidget *parent = 0);
     ~WindowConfiguration();
 
     SerialPortConfig getSerialPortConfig();
-    QString getDataFormat();
+    QString getDataParser();
 
 private:
     void setPortName(const QString& port);

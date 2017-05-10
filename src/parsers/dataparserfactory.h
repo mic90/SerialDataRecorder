@@ -8,6 +8,7 @@
 class DataParserFactory : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY(DataParserFactory)
 public:
     explicit DataParserFactory(QObject *parent = 0);
     ~DataParserFactory();

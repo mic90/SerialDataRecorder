@@ -15,13 +15,12 @@ AsciiDataParser::AsciiDataParser():
 QList<QJsonArray> AsciiDataParser::parse(const QString &data)
 {
     m_buffer.append(data);
-    if(!m_buffer.endsWith('\n'))
+    if(m_buffer.indexOf('\n') == -1)
     {
         return QList<QJsonArray>();
     }
     QList<QJsonArray> dataList;
 
-    qDebug() << m_buffer;
     for(QString const& line : m_buffer.split('\n', QString::SkipEmptyParts))
     {
         if(line.isEmpty()) continue;
@@ -48,6 +47,7 @@ QList<QJsonArray> AsciiDataParser::parse(const QString &data)
         }
     }
 
-    m_buffer.clear();
+    int lastNewLine = m_buffer.lastIndexOf('\n');
+    m_buffer = m_buffer.remove(0, lastNewLine + 1);
     return dataList;
 }

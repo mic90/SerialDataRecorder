@@ -46,6 +46,7 @@ void SerialPort::close()
         return;
     }
 
+    m_serial.clear();
     m_serial.close();
     QLOG_INFO() << "Serial port" << m_config.name() << "closed";
 }
@@ -64,8 +65,6 @@ void SerialPort::process()
 {
     while(m_serial.isOpen())
     {
-        qDebug() << "Loop started";
-        m_serial.waitForReadyRead();
         if(m_serial.bytesAvailable() <= 0)
         {
             QThread::usleep(100);
@@ -78,12 +77,10 @@ void SerialPort::process()
             continue;
         }
         auto parsed = m_parser->parse(data);
-        qDebug() << "Parsing finished";
         if(!parsed.isEmpty()) {
             emit dataReady(parsed);
         }
         QThread::usleep(100);
-        qDebug() << "Loop finished";
     }
     QLOG_DEBUG() << "Serial port processing finished";
 }

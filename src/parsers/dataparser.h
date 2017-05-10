@@ -20,6 +20,7 @@ class DataParserPlugin
 public:
     virtual QString getName() const = 0;
     virtual QString getDescription() const = 0;
+    virtual QString getExampleFormat() const = 0;
     virtual std::unique_ptr<DataParserBase> getParser() const = 0;
 };
 

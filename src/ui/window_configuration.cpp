@@ -5,13 +5,16 @@
 
 #include <serial/serialportconfig.h>
 
-WindowConfiguration::WindowConfiguration(QSharedPointer<Project> project, QWidget *parent) :
+WindowConfiguration::WindowConfiguration(QSharedPointer<Project> project,
+                                         QStringList const& parserNames, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::WindowConfiguration),
     m_project(project)
 {
     ui->setupUi(this);
     ui->name->addItems(getSerialPorts());
+    ui->dataFormat->addItems(parserNames);
+    ui->dataFormat->setCurrentIndex(parserNames.indexOf(project->getDataParserName()));
 
     m_config = project->serialConfig();
     setBaudRate((QSerialPort::BaudRate)m_config.baudRate());
@@ -32,7 +35,7 @@ SerialPortConfig WindowConfiguration::getSerialPortConfig()
     return m_config;
 }
 
-QString WindowConfiguration::getDataFormat()
+QString WindowConfiguration::getDataParser()
 {
     return ui->dataFormat->currentText();
 }

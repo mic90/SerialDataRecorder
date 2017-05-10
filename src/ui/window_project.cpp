@@ -175,27 +175,32 @@ void WindowProject::on_actionConnect_triggered()
 {
     clearCharts();
 
-    if(m_project->getDataParserName().isEmpty())
+    QString selectedParser = m_project->getDataParserName();
+    if(selectedParser.isEmpty())
     {
-        QLOG_ERROR() << "No data parser was selected, please check project configuration";
-        QMessageBox::critical(this, "Error", "No data parser was selected, please check project configuration");
+        QString error = "No data parser was selected, please check project configuration";
+        QLOG_ERROR() << error;
+        QMessageBox::critical(this, "Error", error);
         return;
     }
 
-    auto parser = m_parserFactory.createParser("ASCII");
+    auto parser = m_parserFactory.createParser(selectedParser);
     if(parser == nullptr)
     {
-        QLOG_ERROR() << "Couldn't create given data parser";
-        QMessageBox::critical(this, "Error", "Couldn't create given data parser");
+        QString error = "Couldn't create given data parser, please check serial port configuration";
+        QLOG_ERROR() << error;
+        QMessageBox::critical(this, "Error", error);
         return;
     }
-    QLOG_INFO() << "Data parser set to" << m_project->getDataParserName();
+    QLOG_INFO() << "Data parser set to" << selectedParser;
     m_serial.reset(new SerialThread(m_project->serialConfig(), std::move(parser)));
     connect(this, &WindowProject::startProcessing, m_serial.data(), &SerialThread::process);
     bool ret = m_serial->open();
     if(!ret)
     {
-        QMessageBox::critical(this, "Error", "Connection failed, can't open serial port");
+        QString error = "Connection failed, can't open serial port";
+        QLOG_ERROR() << error;
+        QMessageBox::critical(this, "Error", error);
         return;
     }
     emit startProcessing();
@@ -233,11 +238,11 @@ void WindowProject::on_actionDisconnect_triggered()
 
 void WindowProject::on_actionSerial_Configuration_triggered()
 {
-    WindowConfiguration configWnd(m_project);
+    WindowConfiguration configWnd(m_project, m_parserFactory.getParsersNames());
     if(configWnd.exec())
     {
         m_project->setSerialConfig(configWnd.getSerialPortConfig());
-        m_project->setDataParserName(configWnd.getDataFormat());
+        m_project->setDataParserName(configWnd.getDataParser());
     }
 }
 
